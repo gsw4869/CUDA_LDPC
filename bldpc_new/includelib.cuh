@@ -1,0 +1,5 @@
+#include "define.cuh"
+#include "encoder.cuh"
+#include "decoder.cuh"
+#include "struct.cuh"
+#include "simu.cuh"
