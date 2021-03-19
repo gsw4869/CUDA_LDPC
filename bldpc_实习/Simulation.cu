@@ -5,8 +5,8 @@
 #include "device_launch_parameters.h"
 
 /*
-* ·ÂÕæº¯Êı
-* AWGN:AWGNChannelÀà±äÁ¿£¬°üº¬ÔëÉùÖÖ×ÓµÈ
+* ä»¿çœŸå‡½æ•°
+* AWGN:AWGNChannelç±»å˜é‡ï¼ŒåŒ…å«å™ªå£°ç§å­ç­‰
 * 
 */
 void Simulation_GPU(AWGNChannel* AWGN, float* sigma_GPU, Simulation* SIM, int* Address_Variablenode, int* Weight_Checknode, int* Weight_Variablenode)
@@ -15,25 +15,25 @@ void Simulation_GPU(AWGNChannel* AWGN, float* sigma_GPU, Simulation* SIM, int* A
 	cudaDeviceProp prop;
 	int Num_Device;
 	int* CodeWord;
-	int* CodeWord_GPU;			// ±àÂëËùµÃÂë×ÖĞòÁĞ,Num_Frames_OneTime_defineÖ¡,·ÖÅäÔÚGPUÄÚ´æÖĞ
-	float* Channel_Out_GPU;		// Num_Frames_OneTime_defineÖ¡Êı¾İ¾­¹ıAWGNĞÅµÀºóµÄ½á¹û,·ÖÅäÔÚGPUÄÚ´æÖĞ
+	int* CodeWord_GPU;			// ç¼–ç æ‰€å¾—ç å­—åºåˆ—,Num_Frames_OneTime_defineå¸§,åˆ†é…åœ¨GPUå†…å­˜ä¸­
+	float* Channel_Out_GPU;		// Num_Frames_OneTime_defineå¸§æ•°æ®ç»è¿‡AWGNä¿¡é“åçš„ç»“æœ,åˆ†é…åœ¨GPUå†…å­˜ä¸­
 	float* Channel_Out;
-	int* D;						// Num_Frames_OneTime_defineÖ¡Êı¾İµÄÒëÂë½á¹û+Ğ£Ñé½á¹û,·ÖÅäÔÚCPUÄÚ´æÖĞ
+	int* D;						// Num_Frames_OneTime_defineå¸§æ•°æ®çš„è¯‘ç ç»“æœ+æ ¡éªŒç»“æœ,åˆ†é…åœ¨CPUå†…å­˜ä¸­
 	int ThreadPerBlock, NumBlock;
 	int stopflag;
 	float TimeGPU;
 	LDPCCode* LDPC;
 
 
-	cudaEvent_t GPU_start;			// GPUËÙÂÊÍ³¼Æ²ÎÊı
+	cudaEvent_t GPU_start;			// GPUé€Ÿç‡ç»Ÿè®¡å‚æ•°
 	cudaEvent_t GPU_stop;
 	cudaEventCreate(&GPU_start);
 	cudaEventCreate(&GPU_stop);
 
 	
-	// ²éÕÒÏµÍ³ÖĞµÄGPU¸öÊı,²¢Ö¸¶¨²ÉÓÃÄÇÒ»¿é,Í¬Ê±µÃµ½¸ÃGPUµÄĞÔÄÜ²ÎÊı
+	// æŸ¥æ‰¾ç³»ç»Ÿä¸­çš„GPUä¸ªæ•°,å¹¶æŒ‡å®šé‡‡ç”¨é‚£ä¸€å—,åŒæ—¶å¾—åˆ°è¯¥GPUçš„æ€§èƒ½å‚æ•°
 	cudaStatus = cudaGetDeviceCount(&Num_Device);
-	if (cudaStatus != cudaSuccess)	// Ã»ÓĞÒ»¿é¿ÉÒÔÓÃÓÚ¼ÆËãµÄGPU,ÔòÏÂÁĞËùÓĞ²½ÖèÎŞ·¨½øĞĞ
+	if (cudaStatus != cudaSuccess)	// æ²¡æœ‰ä¸€å—å¯ä»¥ç”¨äºè®¡ç®—çš„GPU,åˆ™ä¸‹åˆ—æ‰€æœ‰æ­¥éª¤æ— æ³•è¿›è¡Œ
 	{
 		printf("There is no GPU beyond 1.0, exit!\n");
 		//getch();
@@ -41,8 +41,8 @@ void Simulation_GPU(AWGNChannel* AWGN, float* sigma_GPU, Simulation* SIM, int* A
 	}
 	else
 	{
-		cudaStatus = cudaGetDeviceProperties(&prop, Num_Device - 1);	// Ñ¡Ôñ×îºóÒ»¿éGPUÓÃÓÚ¼ÆËã,Í¬Ê±»ñµÃËüµÄĞÔÄÜ²ÎÊı
-		if (cudaStatus != cudaSuccess)	// Ã»ÓĞÒ»¿é¿ÉÒÔÓÃÓÚ¼ÆËãµÄGPU,ÔòÏÂÁĞËùÓĞ²½ÖèÎŞ·¨½øĞĞ
+		cudaStatus = cudaGetDeviceProperties(&prop, Num_Device - 1);	// é€‰æ‹©æœ€åä¸€å—GPUç”¨äºè®¡ç®—,åŒæ—¶è·å¾—å®ƒçš„æ€§èƒ½å‚æ•°
+		if (cudaStatus != cudaSuccess)	// æ²¡æœ‰ä¸€å—å¯ä»¥ç”¨äºè®¡ç®—çš„GPU,åˆ™ä¸‹åˆ—æ‰€æœ‰æ­¥éª¤æ— æ³•è¿›è¡Œ
 		{
 			printf("Cannot get device properties, exit!\n");
 			//getch();
@@ -98,8 +98,8 @@ void Simulation_GPU(AWGNChannel* AWGN, float* sigma_GPU, Simulation* SIM, int* A
 	{
 		SIM->num_Frames += Num_Frames_OneTime;
 
-		// ²úÉúÂë×ÖĞòÁĞ
-		if (PN_Message == 0)	// ±¾°æ±¾¾ùÓÃÈ«ÁãĞòÁĞ
+		// äº§ç”Ÿç å­—åºåˆ—
+		if (PN_Message == 0)	// æœ¬ç‰ˆæœ¬å‡ç”¨å…¨é›¶åºåˆ—
 		{
 			memset(CodeWord, 0, CW_Len * Num_Frames_OneTime * sizeof(int));
 			cudaStatus = cudaMemset(CodeWord_GPU, 0, Num_Frames_OneTime * CW_Len * sizeof(int));
@@ -110,13 +110,13 @@ void Simulation_GPU(AWGNChannel* AWGN, float* sigma_GPU, Simulation* SIM, int* A
 				exit(0);
 			}
 		}
-		else if (PN_Message == 1)	// PNĞòÁĞ,ĞèÒª±àÂë
+		else if (PN_Message == 1)	// PNåºåˆ—,éœ€è¦ç¼–ç 
 		{
 		}
 
-		// Num_Frames_OneTime_defineÖ¡Êı¾İÒÀ´Î¾­¹ıAWGNĞÅµÀ,µÃµ½ÏàÓ¦µÄĞÅµÀÊä³ö.ÆäÖĞ,¸÷Âë×ÖµÄÊä³ö´©²åÔÚÒ»Æğ.
+		// Num_Frames_OneTime_defineå¸§æ•°æ®ä¾æ¬¡ç»è¿‡AWGNä¿¡é“,å¾—åˆ°ç›¸åº”çš„ä¿¡é“è¾“å‡º.å…¶ä¸­,å„ç å­—çš„è¾“å‡ºç©¿æ’åœ¨ä¸€èµ·.
 		ThreadPerBlock = prop.maxThreadsPerBlock;
-		NumBlock = (CW_Len % ThreadPerBlock == 0) ? CW_Len / ThreadPerBlock : CW_Len / ThreadPerBlock + 1;//±£Ö¤¹»´¦Àí	
+		NumBlock = (CW_Len % ThreadPerBlock == 0) ? CW_Len / ThreadPerBlock : CW_Len / ThreadPerBlock + 1;//ä¿è¯å¤Ÿå¤„ç†	
 		if (Add_noise == 1)
 		{
 
@@ -127,7 +127,7 @@ void Simulation_GPU(AWGNChannel* AWGN, float* sigma_GPU, Simulation* SIM, int* A
 		
 		LDPC_Decoder_GPU(D, Channel_Out_GPU, prop, Address_Variablenode, Weight_Checknode, Weight_Variablenode,LDPC);
 
-		// Í³¼Æ16Ö¡µÄ½á¹û
+		// ç»Ÿè®¡16å¸§çš„ç»“æœ
 		stopflag = Statistic(SIM, CodeWord, D, LDPC);
 		// if (SIM->num_Frames >= leastTestFrames)
 		// {
@@ -157,12 +157,12 @@ void Simulation_GPU(AWGNChannel* AWGN, float* sigma_GPU, Simulation* SIM, int* A
 
 
 /*
-* ·ÂÕæ²ÎÊıÏÔÊ¾º¯Êı
+* ä»¿çœŸå‚æ•°æ˜¾ç¤ºå‡½æ•°
 */
 void WriteLogo(AWGNChannel* AWGN, Simulation* SIM)
 {
 
-	/*½«·ÂÕæ²ÎÊı´òÓ¡µ½ÆÁÄ»ÉÏ*/
+	/*å°†ä»¿çœŸå‚æ•°æ‰“å°åˆ°å±å¹•ä¸Š*/
 	printf("*******************Binary LDPC Simulation*******************\n");
 	printf("*Author: Lv Yanchen                         Date:2020/9/28\n\n");
 	printf("* Message bits' length of LDPC is %d\n", msgLen);
@@ -226,12 +226,12 @@ void WriteLogo(AWGNChannel* AWGN, Simulation* SIM)
 }
 
 /*
-* Í³¼Æº¯Êı£¬Í³¼Æ·ÂÕæ½á¹û
+* ç»Ÿè®¡å‡½æ•°ï¼Œç»Ÿè®¡ä»¿çœŸç»“æœ
 */
 int Statistic(Simulation* SIM, int* CodeWord_Frames, int* D,LDPCCode *LDPC)
 {
 	int index0, index1, Length;
-	int Error_msgBit[Num_Frames_OneTime];	// ???????§Õ???????¦Ë???????
+	int Error_msgBit[Num_Frames_OneTime];	// ???????Ğ´???????Î»???????
 	Length = (Message_CW == 0) ? msgLen : CW_Len;
 
 	memset(Error_msgBit, 0, Num_Frames_OneTime * sizeof(int));
@@ -271,9 +271,9 @@ int Statistic(Simulation* SIM, int* CodeWord_Frames, int* D,LDPCCode *LDPC)
 }
 
 /*
-H:Ğ£Ñé¾ØÕó
-Weight_Checknode:°´Ë³Ğò¼ÇÂ¼Ã¿¸öĞ£Ñé½ÚµãµÄÖØÁ¿£¬×îºóÒ»Î»Îª×î´óÖØÁ¿
-Weight_Variablenode:°´Ë³Ğò¼ÇÂ¼Ã¿¸ö±äÁ¿½ÚµãµÄÖØÁ¿£¬×îºóÒ»Î»Îª×î´óÖØÁ¿
+H:æ ¡éªŒçŸ©é˜µ
+Weight_Checknode:æŒ‰é¡ºåºè®°å½•æ¯ä¸ªæ ¡éªŒèŠ‚ç‚¹çš„é‡é‡ï¼Œæœ€åä¸€ä½ä¸ºæœ€å¤§é‡é‡
+Weight_Variablenode:æŒ‰é¡ºåºè®°å½•æ¯ä¸ªå˜é‡èŠ‚ç‚¹çš„é‡é‡ï¼Œæœ€åä¸€ä½ä¸ºæœ€å¤§é‡é‡
 */
 void Get_H(int* H, int* Weight_Checknode, int* Weight_Variablenode)
 {
@@ -309,10 +309,10 @@ void Get_H(int* H, int* Weight_Checknode, int* Weight_Variablenode)
 	{
 		for (index1 = 0; index1 < L; index1++)
 		{
-			Weight_Checknode[index0] = (H[index0 * L + index1] != -1) ? Weight_Checknode[index0] + 1 : Weight_Checknode[index0];//????-1??????1???????§Ö?????(§µ????)
+			Weight_Checknode[index0] = (H[index0 * L + index1] != -1) ? Weight_Checknode[index0] + 1 : Weight_Checknode[index0];//????-1??????1???????Ğµ?????(Ğ£????)
 		}
-		// Ñ¡Ôñ×î´óÖØÁ¿
-		Weight_Checknode[J] = (Weight_Checknode[index0] > Weight_Checknode[J]) ? Weight_Checknode[index0] : Weight_Checknode[J];//§µ????????????
+		// é€‰æ‹©æœ€å¤§é‡é‡
+		Weight_Checknode[J] = (Weight_Checknode[index0] > Weight_Checknode[J]) ? Weight_Checknode[index0] : Weight_Checknode[J];//Ğ£????????????
 	}
 
 
@@ -320,13 +320,13 @@ void Get_H(int* H, int* Weight_Checknode, int* Weight_Variablenode)
 	{
 		for (index1 = 0; index1 < J; index1++)
 		{
-			Weight_Variablenode[index0] = (H[index1 * L + index0] != -1) ? Weight_Variablenode[index0] + 1 : Weight_Variablenode[index0];//????-1??????1???????§Ö?????(???????)
+			Weight_Variablenode[index0] = (H[index1 * L + index0] != -1) ? Weight_Variablenode[index0] + 1 : Weight_Variablenode[index0];//????-1??????1???????Ğµ?????(???????)
 		}
-		// Ñ¡Ôñ×î´óÖØÁ¿
+		// é€‰æ‹©æœ€å¤§é‡é‡
 		Weight_Variablenode[L] = (Weight_Variablenode[index0] > Weight_Variablenode[L]) ? Weight_Variablenode[index0] : Weight_Variablenode[L];//???????????????
 	}
 
-	if (Weight_Checknode[J] > maxWeight_checknode || Weight_Checknode[J] < minWeight_checknode)//?????????¦¶
+	if (Weight_Checknode[J] > maxWeight_checknode || Weight_Checknode[J] < minWeight_checknode)//?????????Î§
 	{
 		printf("You must input a LDPC code with Weight_Checknode in [%d, %d], exit!\n", minWeight_checknode, maxWeight_checknode);
 		//getch();
@@ -341,33 +341,33 @@ void Get_H(int* H, int* Weight_Checknode, int* Weight_Variablenode)
 }
 
 /*
-* H:Ğ£Ñé¾ØÕó
-* Weight_Checknode:Ğ£Ñé½ÚµãÖØÁ¿
-* Weight_Variablenode:±äÁ¿½ÚµãÖØÁ¿
-* Address_Variablenode:Ã¿¸ö±äÁ¿½ÚµãËù¶ÔÓ¦Ğ£Ñé½ÚµãµÄmemory_rqµÄµØÖ·
-* Ğ£Ñé½Úµã²»ĞèÒªÊÇÒòÎªĞ£Ñé½Úµã¶ÔÓ¦µÄ¾ÍÊÇÃ¿Ò»ĞĞmemory_rq£¬µØÖ·ÊÇÁ¬ÔÚÒ»ÆğµÄ
+* H:æ ¡éªŒçŸ©é˜µ
+* Weight_Checknode:æ ¡éªŒèŠ‚ç‚¹é‡é‡
+* Weight_Variablenode:å˜é‡èŠ‚ç‚¹é‡é‡
+* Address_Variablenode:æ¯ä¸ªå˜é‡èŠ‚ç‚¹æ‰€å¯¹åº”æ ¡éªŒèŠ‚ç‚¹çš„memory_rqçš„åœ°å€
+* æ ¡éªŒèŠ‚ç‚¹ä¸éœ€è¦æ˜¯å› ä¸ºæ ¡éªŒèŠ‚ç‚¹å¯¹åº”çš„å°±æ˜¯æ¯ä¸€è¡Œmemory_rqï¼Œåœ°å€æ˜¯è¿åœ¨ä¸€èµ·çš„
 */
 void Transform_H(int* H, int* Weight_Checknode, int* Weight_Variablenode, int* Address_Variablenode)
 {
 	int index0, index1, index2, index3, index4, position;
-	for (index0 = 0; index0 < L; index0++)		// index0Îªµ±Ç°ËùÔÚÁĞ
+	for (index0 = 0; index0 < L; index0++)		// index0ä¸ºå½“å‰æ‰€åœ¨åˆ—
 	{
 		index2 = 0;
-		for (index1 = 0; index1 < J; index1++)	// index1Îªµ±Ç°ËùÔÚĞĞ
+		for (index1 = 0; index1 < J; index1++)	// index1ä¸ºå½“å‰æ‰€åœ¨è¡Œ
 		{
 			if (H[index1 * L + index0] != -1)
 			{
-				position = 0;	// ±äÁ¿½ÚµãÏàÁ¬µÄĞ£Ñé½ÚµãÖĞ,¸Ã±äÁ¿½ÚµãµÄÏà¶ÔÎ»ÖÃ(Ã¿Ò»ĞĞ1¶ÔÓ¦µÄÎ»ÖÃ)
+				position = 0;	// å˜é‡èŠ‚ç‚¹ç›¸è¿çš„æ ¡éªŒèŠ‚ç‚¹ä¸­,è¯¥å˜é‡èŠ‚ç‚¹çš„ç›¸å¯¹ä½ç½®(æ¯ä¸€è¡Œ1å¯¹åº”çš„ä½ç½®)
 				for (index3 = 0; index3 < index0; index3++)
 				{
-					position = (H[index1 * L + index3] != -1) ? position + 1 : position;//Ã¿Ò»ĞĞµÚ¼¸¿é·ÇÈ«Áã¾ØÕó¿é
+					position = (H[index1 * L + index3] != -1) ? position + 1 : position;//æ¯ä¸€è¡Œç¬¬å‡ å—éå…¨é›¶çŸ©é˜µå—
 				}
-				for (index3 = 0; index3 < Z; index3++)//index3(ÁĞ)£¬Ã¿¼ÓÒ»¾ÍÊÇÍ³¼ÆÏÂÒ»¸ö±äÁ¿½ÚµãµÄÁ¬½Ó¹ØÏµ
+				for (index3 = 0; index3 < Z; index3++)//index3(åˆ—)ï¼Œæ¯åŠ ä¸€å°±æ˜¯ç»Ÿè®¡ä¸‹ä¸€ä¸ªå˜é‡èŠ‚ç‚¹çš„è¿æ¥å…³ç³»
 				{
-					index4 = (((Z - H[index1 * L + index0]) % Z + index3) >= Z) ? (Z - H[index1 * L + index0]) % Z + index3 - Z : index3;//zÎ¬·½¿éÀï£¬Ã¿Ò»ÁĞµÄ1ÔÚµÚ¼¸ĞĞ£¨½áºÏÏÂÃæÊ½×Ó£©
-					Address_Variablenode[(index0 * Z + index3) * Weight_Variablenode[L] + index2] = (index1 * Z + index4) * Weight_Checknode[J] + position;//¼ÇÂ¼Ã¿¸ö±äÁ¿½Úµã£¨Ã¿Ò»ÁĞ£©ºÍÄÄĞ©µãÁ¬½Ó£¨ĞòºÅÎªÏÈĞĞºóÁĞ£©
+					index4 = (((Z - H[index1 * L + index0]) % Z + index3) >= Z) ? (Z - H[index1 * L + index0]) % Z + index3 - Z : index3;//zç»´æ–¹å—é‡Œï¼Œæ¯ä¸€åˆ—çš„1åœ¨ç¬¬å‡ è¡Œï¼ˆç»“åˆä¸‹é¢å¼å­ï¼‰
+					Address_Variablenode[(index0 * Z + index3) * Weight_Variablenode[L] + index2] = (index1 * Z + index4) * Weight_Checknode[J] + position;//è®°å½•æ¯ä¸ªå˜é‡èŠ‚ç‚¹ï¼ˆæ¯ä¸€åˆ—ï¼‰å’Œå“ªäº›ç‚¹è¿æ¥ï¼ˆåºå·ä¸ºå…ˆè¡Œååˆ—ï¼‰
 				}
-				index2++;//ÏÂÒ»ĞĞ£¨¿é£©
+				index2++;//ä¸‹ä¸€è¡Œï¼ˆå—ï¼‰
 			}
 		}
 	}

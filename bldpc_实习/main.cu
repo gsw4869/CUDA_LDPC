@@ -12,10 +12,10 @@ int main()
 	Simulation* SIM;
 
 
-	int* Weight_Checknode;			// LDPCÂë¸÷·Ö¿éÖĞĞ£Ñé½ÚµãµÄÖØÁ¿,³¤¶ÈÎªJ_define+1,×îºóÒ»¸öÎª×î´óÖØÁ¿.·ÖÅäÔÚCPUÉÏ.
-	int* Weight_Variablenode;		// LDPCÂë¸÷·Ö¿éÖĞ±äÁ¿½ÚµãµÄÖØÁ¿,³¤¶ÈÎªL_define+1,×îºóÒ»¸öÎª×î´óÖØÁ¿.·ÖÅäÔÚCPUÉÏ.
-	int* H;					// LDPCÂë·Ö¿éÊ½Ğ£Ñé¾ØÕó,ÏÈĞĞºóÁĞ,³¤¶ÈÎªJ_define*L_define*Z_define.·ÖÅäÔÚCPUÉÏ.
-	int* Address_Variablenode;		// ±äÁ¿½ÚµãÏàÁ¬½ÓµÄĞ£Ñé½ÚµãµÄĞòºÅ(×¢ÒâÏÖÔÚÊÇNum_Frames_OneTime_define¸öÖ¡´©²åÔÚÒ»ÆğÍ¬Ê±ÒëÂë),³¤¶ÈÎªL_define*J_define*Z_define.·ÖÅäÔÚCPUÉÏ.
+	int* Weight_Checknode;			// LDPCç å„åˆ†å—ä¸­æ ¡éªŒèŠ‚ç‚¹çš„é‡é‡,é•¿åº¦ä¸ºJ_define+1,æœ€åä¸€ä¸ªä¸ºæœ€å¤§é‡é‡.åˆ†é…åœ¨CPUä¸Š.
+	int* Weight_Variablenode;		// LDPCç å„åˆ†å—ä¸­å˜é‡èŠ‚ç‚¹çš„é‡é‡,é•¿åº¦ä¸ºL_define+1,æœ€åä¸€ä¸ªä¸ºæœ€å¤§é‡é‡.åˆ†é…åœ¨CPUä¸Š.
+	int* H;					// LDPCç åˆ†å—å¼æ ¡éªŒçŸ©é˜µ,å…ˆè¡Œååˆ—,é•¿åº¦ä¸ºJ_define*L_define*Z_define.åˆ†é…åœ¨CPUä¸Š.
+	int* Address_Variablenode;		// å˜é‡èŠ‚ç‚¹ç›¸è¿æ¥çš„æ ¡éªŒèŠ‚ç‚¹çš„åºå·(æ³¨æ„ç°åœ¨æ˜¯Num_Frames_OneTime_defineä¸ªå¸§ç©¿æ’åœ¨ä¸€èµ·åŒæ—¶è¯‘ç ),é•¿åº¦ä¸ºL_define*J_define*Z_define.åˆ†é…åœ¨CPUä¸Š.
 	int* Address_Variablenode_GPU;
 	float* sigma_GPU;
 	cudaError_t cudaStatus;
@@ -38,7 +38,7 @@ int main()
 		exit(0);
 	}
 
-	Weight_Checknode = (int*)malloc((J + 1) * sizeof(int));// LDPCÂë¸÷·Ö¿éÖĞĞ£Ñé½ÚµãµÄÖØÁ¿,³¤¶ÈÎªJ_define+1,×îºóÒ»¸öÎª×î´óÖØÁ¿.·ÖÅäÔÚCPUÉÏ.
+	Weight_Checknode = (int*)malloc((J + 1) * sizeof(int));// LDPCç å„åˆ†å—ä¸­æ ¡éªŒèŠ‚ç‚¹çš„é‡é‡,é•¿åº¦ä¸ºJ_define+1,æœ€åä¸€ä¸ªä¸ºæœ€å¤§é‡é‡.åˆ†é…åœ¨CPUä¸Š.
 	if (Weight_Checknode == NULL)
 	{
 		printf("Can not malloc Weight_Checknode in main on Host!\n");
@@ -46,7 +46,7 @@ int main()
 		exit(0);
 	}
 
-	Weight_Variablenode = (int*)malloc((L + 1) * sizeof(int));// LDPCÂë¸÷·Ö¿éÖĞ±äÁ¿½ÚµãµÄÖØÁ¿,³¤¶ÈÎªL_define+1,×îºóÒ»¸öÎª×î´óÖØÁ¿.·ÖÅäÔÚCPUÉÏ.
+	Weight_Variablenode = (int*)malloc((L + 1) * sizeof(int));// LDPCç å„åˆ†å—ä¸­å˜é‡èŠ‚ç‚¹çš„é‡é‡,é•¿åº¦ä¸ºL_define+1,æœ€åä¸€ä¸ªä¸ºæœ€å¤§é‡é‡.åˆ†é…åœ¨CPUä¸Š.
 	if (Weight_Variablenode == NULL)
 	{
 		printf("Can not malloc Weight_Variablenode in main on Host!\n");
@@ -54,7 +54,7 @@ int main()
 		exit(0);
 	}
 
-	H = (int*)malloc(J * L * sizeof(int));// LDPCÂë·Ö¿éÊ½Ğ£Ñé¾ØÕó,ÏÈĞĞºóÁĞ,³¤¶ÈÎªJ_define*L_define.·ÖÅäÔÚCPUÉÏ.
+	H = (int*)malloc(J * L * sizeof(int));// LDPCç åˆ†å—å¼æ ¡éªŒçŸ©é˜µ,å…ˆè¡Œååˆ—,é•¿åº¦ä¸ºJ_define*L_define.åˆ†é…åœ¨CPUä¸Š.
 	if (H == NULL)
 	{
 		printf("Can not malloc Block_H in main on Host!\n");
@@ -62,7 +62,7 @@ int main()
 		exit(0);
 	}
 
-	Address_Variablenode = (int*)malloc(J * L * Z * sizeof(int));// ±äÁ¿½ÚµãÏàÁ¬½ÓµÄĞ£Ñé½ÚµãµÄĞòºÅ(×¢ÒâÏÖÔÚÊÇNum_Frames_OneTime_define¸öÖ¡´©²åÔÚÒ»ÆğÍ¬Ê±ÒëÂë),³¤¶ÈÎªL_define*J_define*Z_define.·ÖÅäÔÚCPUÉÏ.
+	Address_Variablenode = (int*)malloc(J * L * Z * sizeof(int));// å˜é‡èŠ‚ç‚¹ç›¸è¿æ¥çš„æ ¡éªŒèŠ‚ç‚¹çš„åºå·(æ³¨æ„ç°åœ¨æ˜¯Num_Frames_OneTime_defineä¸ªå¸§ç©¿æ’åœ¨ä¸€èµ·åŒæ—¶è¯‘ç ),é•¿åº¦ä¸ºL_define*J_define*Z_define.åˆ†é…åœ¨CPUä¸Š.
 	if (Address_Variablenode == NULL)
 	{
 		printf("Can not malloc Address_Variablenode in main on Host!\n");
@@ -70,7 +70,7 @@ int main()
 		exit(0);
 	}
 
-	cudaStatus = cudaMalloc((void**)&Address_Variablenode_GPU, J * L * Z * sizeof(int));	// ·ÖÅäÔÚGPUµÄglobal memoryÖĞ
+	cudaStatus = cudaMalloc((void**)&Address_Variablenode_GPU, J * L * Z * sizeof(int));	// åˆ†é…åœ¨GPUçš„global memoryä¸­
 	if (cudaStatus != cudaSuccess)
 	{
 		printf("Cannot malloc Address_Variablenode_GPU in main on device, exit!\n");
@@ -78,7 +78,7 @@ int main()
 		exit(0);
 	}
 
-	cudaStatus = cudaMalloc((void**)&sigma_GPU, sizeof(float));	// ·ÖÅäÔÚGPUµÄglobal memoryÖĞ
+	cudaStatus = cudaMalloc((void**)&sigma_GPU, sizeof(float));	// åˆ†é…åœ¨GPUçš„global memoryä¸­
 	if (cudaStatus != cudaSuccess)
 	{
 		printf("Cannot malloc sigma_GPU in main on device, exit!\n");
@@ -92,7 +92,7 @@ int main()
 	memset(Address_Variablenode, -1, J* L* Z * sizeof(int));
 	
 
-	// ´Ódefine.cuhÖĞ¶ÁÈ¡ËùÒªµÄ²ÎÊı,²¢´ÓÍâ²¿µÄQC-LDPCÂë·Ö¿éÊ½Ğ£Ñé¾ØÕóÖĞ¶ÁÈ¡ÏàÓ¦µÄÆ«ÒÆÁ¿ºÍ½ÚµãÖØÁ¿Öµ,´æÓÚÏàÓ¦µÄCPUÄÚ´æÖĞ
+	// ä»define.cuhä¸­è¯»å–æ‰€è¦çš„å‚æ•°,å¹¶ä»å¤–éƒ¨çš„QC-LDPCç åˆ†å—å¼æ ¡éªŒçŸ©é˜µä¸­è¯»å–ç›¸åº”çš„åç§»é‡å’ŒèŠ‚ç‚¹é‡é‡å€¼,å­˜äºç›¸åº”çš„CPUå†…å­˜ä¸­
 	Get_H(H, Weight_Checknode, Weight_Variablenode);
 	Transform_H(H, Weight_Checknode, Weight_Variablenode, Address_Variablenode);
 	cudaStatus = cudaMemcpy(Address_Variablenode_GPU, Address_Variablenode, J * L * Z * sizeof(int), cudaMemcpyHostToDevice);
@@ -103,18 +103,18 @@ int main()
 		exit(0);
 	}
 
-	*(AWGN->seed + 0) = ix_define;			// Ã¿Ò»¸öSNRÏÂÒª¸³Ò»´Î³õÖµ
-	*(AWGN->seed + 1) = iy_define;			// Ã¿Ò»¸öSNRÏÂÒª¸³Ò»´Î³õÖµ
-	*(AWGN->seed + 2) = iz_define;			// Ã¿Ò»¸öSNRÏÂÒª¸³Ò»´Î³õÖµ
-	AWGN->sigma = 0.0;						// Ã¿Ò»¸öSNRÏÂÒª¸³Ò»´ÎÖµ
+	*(AWGN->seed + 0) = ix_define;			// æ¯ä¸€ä¸ªSNRä¸‹è¦èµ‹ä¸€æ¬¡åˆå€¼
+	*(AWGN->seed + 1) = iy_define;			// æ¯ä¸€ä¸ªSNRä¸‹è¦èµ‹ä¸€æ¬¡åˆå€¼
+	*(AWGN->seed + 2) = iz_define;			// æ¯ä¸€ä¸ªSNRä¸‹è¦èµ‹ä¸€æ¬¡åˆå€¼
+	AWGN->sigma = 0.0;						// æ¯ä¸€ä¸ªSNRä¸‹è¦èµ‹ä¸€æ¬¡å€¼
 
-	// ½«²¿·ÖÖØÒª²ÎÊıÏÔÊ¾ÔÚÆÁÄ»ÉÏ,²¢Ğ´ÈëÏàÓ¦µÄÎÄµµÖĞ
+	// å°†éƒ¨åˆ†é‡è¦å‚æ•°æ˜¾ç¤ºåœ¨å±å¹•ä¸Š,å¹¶å†™å…¥ç›¸åº”çš„æ–‡æ¡£ä¸­
 	WriteLogo(AWGN, SIM);
 
 	for (SIM->SNR = startSNR; SIM->SNR <= stopSNR; SIM->SNR += stepSNR)
 	{
-		/*¿ªÊ¼·ÂÕæÖ®Ç°,¶Ô²ÎÊı½øĞĞ³õÊ¼»¯*/
-		*(AWGN->seed + 0) = ix_define;			// ±£Ö¤Ã¿Ò»¸öSNRÏÂµÄ·ÂÕæ»·¾³ÍêÈ«ÏàÍ¬
+		/*å¼€å§‹ä»¿çœŸä¹‹å‰,å¯¹å‚æ•°è¿›è¡Œåˆå§‹åŒ–*/
+		*(AWGN->seed + 0) = ix_define;			// ä¿è¯æ¯ä¸€ä¸ªSNRä¸‹çš„ä»¿çœŸç¯å¢ƒå®Œå…¨ç›¸åŒ
 		*(AWGN->seed + 1) = iy_define;
 		*(AWGN->seed + 2) = iz_define;
 		if (snrtype == 0)
@@ -126,7 +126,7 @@ int main()
 			AWGN->sigma = (float)sqrt(0.5 / (pow(10.0, (SIM->SNR / 10.0))));
 		}
 
-		SIM->num_Frames = 0;					// ÖØĞÂ¿ªÊ¼Í³¼Æ
+		SIM->num_Frames = 0;					// é‡æ–°å¼€å§‹ç»Ÿè®¡
 		SIM->num_Error_Frames = 0;
 		SIM->num_Error_Bits = 0;
 		SIM->Total_Iteration = 0;
@@ -135,7 +135,7 @@ int main()
 
 		//cudaThreadSynchronize();
 
-		/*¿ªÊ¼±¾ĞÅÔë±ÈµãµÄ·ÂÕæ*/
+		/*å¼€å§‹æœ¬ä¿¡å™ªæ¯”ç‚¹çš„ä»¿çœŸ*/
 		if (CPU_GPU == 0)
 		{
 			//SNR_Simulation_CPU(LDPC, AWGN, SIM, Address_Variablenode, Weight_Checknode, Weight_Variablenode);
@@ -152,7 +152,7 @@ int main()
 
 			Simulation_GPU(AWGN, sigma_GPU, SIM, Address_Variablenode_GPU, Weight_Checknode, Weight_Variablenode);
 		}
-		/*¶ÔCPUºÍGPU½øĞĞÍ¬²½,·ÀÖ¹Ö»Ö´ĞĞÒ»¸öĞÅÔë±Èµã¼´Ìø³öÑ­»·*/
+		/*å¯¹CPUå’ŒGPUè¿›è¡ŒåŒæ­¥,é˜²æ­¢åªæ‰§è¡Œä¸€ä¸ªä¿¡å™ªæ¯”ç‚¹å³è·³å‡ºå¾ªç¯*/
 		cudaThreadSynchronize();
 	}
 
