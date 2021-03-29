@@ -5,16 +5,61 @@
 #include "device_launch_parameters.h"
 #include <assert.h>
 
+/*
+* 仿真函数
+* AWGN:AWGNChannel类变量，包含噪声种子等
+* 
+*/
+void Simulation_GPU(Simulation* SIM, VN* Variablenode, CN* Checknode, float* Channel_Out)
+{	
+	// while (SIM->num_Frames<50)
+	// {
+	// 	SIM->num_Frames += 1;
+	// }
+	SIM->num_Frames = 40960;
+}
 
-int **malloc_2(int xDim, int yDim) {
-    int **a = (int **)malloc(xDim * sizeof(int *));
-    a[0] = (int *)malloc(xDim * yDim * sizeof(int));
-    memset(a[0], 0, xDim * yDim * sizeof(int));
-    for (int i = 1; i < xDim; i++) {
-        a[i] = a[i - 1] + yDim;
-    }
-    assert(a != NULL);
-    return a;
+/*
+* 统计函数，统计仿真结果
+*/
+int Statistic(Simulation* SIM, int* CodeWord_Frames, int* D,LDPCCode *H)
+{
+	int index1;
+	int Error_msgBit=0;	
+
+	
+	for (index1 = 0; index1 < H->length; index1++)
+	{
+		Error_msgBit = (D[index1] != CodeWord_Frames[index1]) ? Error_msgBit + 1 : Error_msgBit;
+	}
+	SIM->num_Error_Bits += Error_msgBit;
+	SIM->num_Error_Frames = (Error_msgBit!= 0) ? SIM->num_Error_Frames + 1 : SIM->num_Error_Frames;
+	// SIM->num_Error_Frames = (Error_msgBit!= 0 || D[index0 + CW_Len * Num_Frames_OneTime] == 0) ? SIM->num_Error_Frames + 1 : SIM->num_Error_Frames;
+	// SIM->num_Alarm_Frames = (Error_msgBit[index0] == 0 && D[index0 + CW_Len * Num_Frames_OneTime] == 0) ? SIM->num_Alarm_Frames + 1 : SIM->num_Alarm_Frames;
+	// SIM->num_False_Frames = (Error_msgBit[index0] != 0 && D[index0 + CW_Len * Num_Frames_OneTime] == 1) ? SIM->num_False_Frames + 1 : SIM->num_False_Frames;
+	SIM->Total_Iteration += H->iteraTime;
+	
+	if (SIM->num_Frames % displayStep == 0)
+	{
+		SIM->BER = ((double)SIM->num_Error_Bits / (double)(SIM->num_Frames)) / (double)(H->length);
+		SIM->FER = (double)SIM->num_Error_Frames / (double)SIM->num_Frames;
+		SIM->AverageIT = (double)SIM->Total_Iteration / (double)SIM->num_Frames;
+		// SIM->FER_Alarm = (double)SIM->num_Alarm_Frames / (double)SIM->num_Frames;
+		// SIM->FER_False = (double)SIM->num_False_Frames / (double)SIM->num_Frames;
+		printf(" %.1f %8d  %4d  %6.4e  %6.4e  %.2f  %6.4e %6.4e\n", SIM->SNR, SIM->num_Frames, SIM->num_Error_Frames, SIM->FER, SIM->BER, SIM->AverageIT, SIM->FER_False, SIM->FER_Alarm);
+	}
+
+	if (SIM->num_Error_Frames >= leastErrorFrames && SIM->num_Frames >= leastTestFrames)
+	{
+		SIM->BER = ((double)SIM->num_Error_Bits / (double)(SIM->num_Frames)) / (double)(H->length);
+		SIM->FER = (double)SIM->num_Error_Frames / (double)SIM->num_Frames;
+		SIM->AverageIT = (double)SIM->Total_Iteration / (double)SIM->num_Frames;
+		// SIM->FER_Alarm = (double)SIM->num_Alarm_Frames / (double)SIM->num_Frames;
+		// SIM->FER_False = (double)SIM->num_False_Frames / (double)SIM->num_Frames;
+		printf(" %.1f %8d  %4d  %6.4e  %6.4e  %.2f  %6.4e %6.4e\n", SIM->SNR, SIM->num_Frames, SIM->num_Error_Frames, SIM->FER, SIM->BER, SIM->AverageIT, SIM->FER_False, SIM->FER_Alarm);
+		return 1;
+	}
+	return 0;
 }
 
 /*
@@ -43,7 +88,7 @@ void Get_H(LDPCCode* H,VN* Variablenode,CN* Checknode)
 	Checknode=(CN *)malloc(H->Checknode_num*sizeof(CN));
 
 	H->rate=(float)(H->Variablenode_num-H->Checknode_num)/H->Variablenode_num;
-
+    H->length=H->Variablenode_num;
 	fscanf(fp_H, "%d", &index1);// GF域
 
 	fscanf(fp_H, "%d", &H->maxWeight_variablenode);//最大行重

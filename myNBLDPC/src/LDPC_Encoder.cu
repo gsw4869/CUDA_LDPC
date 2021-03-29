@@ -12,7 +12,7 @@ void AWGNChannel_CPU(LDPCCode* H, AWGNChannel* AWGN, float* Channel_Out,int* Cod
 {
 	int index0;
 	float u1, u2, temp;
-	for (index0 = 0; index0 < H->Variablenode_num; index0++)
+	for (index0 = 0; index0 < H->length; index0++)
 	{
 		u1 = RandomModule(AWGN->seed);
 		u2 = RandomModule(AWGN->seed);

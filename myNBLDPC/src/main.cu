@@ -14,8 +14,6 @@ int main()
 	Simulation* SIM;
 	SIM=(Simulation* )malloc(sizeof(Simulation));
 
-	
-
 	CN* Checknode;			// LDPC码各分块中校验节点的重量
 	VN* Variablenode;		// LDPC码各分块中变量节点的重量
 	
@@ -26,14 +24,12 @@ int main()
 
 
 	int* CodeWord;
-	CodeWord=(int* )malloc(H->Variablenode_num*sizeof(int));
-	memset(CodeWord,0,H->Variablenode_num*sizeof(int));
+	CodeWord=(int* )malloc(H->length*sizeof(int));
+	memset(CodeWord,0,H->length*sizeof(int));
 
-	// float* BPSK_Out;
-	// BPSK_Out=(float* )malloc(H->Variablenode_num*sizeof(float));
 
 	float* Channel_Out;
-	Channel_Out=(float* )malloc(H->Variablenode_num*sizeof(float));
+	Channel_Out=(float* )malloc(H->length*sizeof(float));
 
 	for (SIM->SNR = startSNR; SIM->SNR <= stopSNR; SIM->SNR += stepSNR)
 	{
@@ -50,7 +46,6 @@ int main()
 		{
 			AWGN->sigma = (float)sqrt(0.5 / (pow(10.0, (SIM->SNR / 10.0))));
 		}
-		printf("%f\n\n",AWGN->sigma);
 		SIM->num_Frames = 0;					// 重新开始统计
 		SIM->num_Error_Frames = 0;
 		SIM->num_Error_Bits = 0;
@@ -60,6 +55,10 @@ int main()
 
 		// BPSK(H,BPSK_Out,CodeWord);
 		AWGNChannel_CPU(H,AWGN,Channel_Out,CodeWord);
+
+		Simulation_GPU(SIM, Variablenode, Checknode, Channel_Out);
+
+		Statistic(SIM,CodeWord,CodeWord,H);
 
 		// for(int i=0;i<H->Variablenode_num;i++)
 		// {

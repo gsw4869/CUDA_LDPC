@@ -1,7 +1,7 @@
 #include "define.cuh"
 #include "struct.cuh"
 
-void Simulation_GPU(AWGNChannel* AWGN, float* sigma_GPU, Simulation* SIM, int* Address_Variablenode, int* Weight_Checknode, int* Weight_Variablenode);
+void Simulation_GPU(Simulation* SIM, VN* Variablenode, CN* Checknode, float* Channel_Out);
 
 void WriteLogo(AWGNChannel* AWGN, Simulation* SIM);
 

@@ -5,13 +5,14 @@
 
 typedef struct
 {
-	// int iteraTime;		// 当前帧完成译码所用的迭代次数,统计用
+	int iteraTime;		// 当前帧完成译码所用的迭代次数,统计用
 	int maxWeight_checknode;
 	int maxWeight_variablenode;
 	int GF;
 	int Variablenode_num;
 	int Checknode_num;
 	float rate;
+	int length;
 }LDPCCode;
 typedef struct
 {
