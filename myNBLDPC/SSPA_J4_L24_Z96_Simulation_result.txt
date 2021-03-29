@@ -1,0 +1,24 @@
+*************************LDPC Simulation*************************
+*Author: WangYing   Email: 61007301@163.com
+
+* Message bits' length of LDPC is 1920
+* Parity bits' length of LDPC is 384
+* CodeWord length of LDPC is 2304
+* H's row is divided into 4 blocks, and column divided into 24 blocks. Dimension Z is 96
+* The encoding rate for current LDPC is 0.833333
+* Information bits are zero sequence, encoder is no need here.
+* Maximum iterations for LDPC_decoder is 100
+* LDPC decoder use standard SPA algorithm, tanh and atanh are used here!
+* Add white gaussin noise on the symbol.
+* Initial seeds for each SNR are 173, 173, 173.
+* The type of SNR is Eb/No
+* Simulation SNR(SNR_start SNR_stop SNR_step) are: -4.00, 2.00, 14.00
+* Least error frames to exit the simulation for each SNR is 50.
+* Least test frames to exit the simulation for each SNR is 10000.
+* Display step is 200.
+* Simulation is on GPU.
+* 16 frames are simulated simultaneously.
+***************************************************************************
+
+
+ SNR	       NTF	 NEF	      FER	    BER		 AverIT	  NTF_F	  NTF_A	  FER_F		  FER_A
