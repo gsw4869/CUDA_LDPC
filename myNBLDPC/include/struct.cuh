@@ -5,6 +5,11 @@
 
 typedef struct
 {
+	float Real;
+	float Image;
+}CComplex;
+typedef struct
+{
 	int iteraTime;		// 当前帧完成译码所用的迭代次数,统计用
 	int maxWeight_checknode;
 	int maxWeight_variablenode;
@@ -13,6 +18,7 @@ typedef struct
 	int Checknode_num;
 	float rate;
 	int length;
+	int q_bit;
 }LDPCCode;
 typedef struct
 {

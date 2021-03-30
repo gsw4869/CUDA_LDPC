@@ -1,0 +1,2 @@
+Point:	0	Real:	1	Image:	0
+Point:	1	Real:	-1	Image:	0

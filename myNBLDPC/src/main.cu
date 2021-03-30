@@ -19,17 +19,46 @@ int main()
 	
 	LDPCCode* H;
 	H=(LDPCCode* )malloc(sizeof(LDPCCode));
+
+//	先读取行数和列数,分配空间
+	char file[100]="Tanner_74_9_Z128_GF16.txt";
+	FILE* fp_H;
 	
-	Get_H(H,Variablenode,Checknode);
+	if (NULL == (fp_H = fopen(file, "r")))
+	{
+		printf("can not open file: %s\n", file);
+		exit(0);
+	}
 
+	fscanf(fp_H, "%d", &H->Variablenode_num);// 变量节点个数（行数）
+	Variablenode=(VN *)malloc(H->Variablenode_num*sizeof(VN));
 
-	int* CodeWord;
-	CodeWord=(int* )malloc(H->length*sizeof(int));
-	memset(CodeWord,0,H->length*sizeof(int));
+	fscanf(fp_H, "%d", &H->Checknode_num);// 校验节点个数（列数）
+	Checknode=(CN *)malloc(H->Checknode_num*sizeof(CN));
 
+	fclose(fp_H);
+//
+	Get_H(H,Variablenode,Checknode);//初始化剩下的参数
+	
+	CComplex* CONSTELLATION;
+	CONSTELLATION=Get_CONSTELLATION(H);
 
-	float* Channel_Out;
-	Channel_Out=(float* )malloc(H->length*sizeof(float));
+	CComplex* CComplex_sym;
+	CComplex_sym=(CComplex* )malloc(H->Variablenode_num*sizeof(CComplex));
+
+	CComplex* CComplex_sym_Channelout;
+	CComplex_sym_Channelout=(CComplex* )malloc(H->Variablenode_num*sizeof(CComplex));
+
+	int* CodeWord_bit;
+	CodeWord_bit=(int* )malloc(H->length*sizeof(int));
+	memset(CodeWord_bit,0,H->length*sizeof(int));
+
+	int* CodeWord_sym;
+	CodeWord_sym=(int* )malloc(H->Variablenode_num*sizeof(int));
+	memset(CodeWord_sym,0,H->Variablenode_num*sizeof(int));
+
+	BitToSym(H,CodeWord_sym,CodeWord_bit);
+	Modulate(H,CONSTELLATION,CComplex_sym,CodeWord_sym);
 
 	for (SIM->SNR = startSNR; SIM->SNR <= stopSNR; SIM->SNR += stepSNR)
 	{
@@ -54,19 +83,30 @@ int main()
 		SIM->num_Alarm_Frames = 0;
 
 		// BPSK(H,BPSK_Out,CodeWord);
-		AWGNChannel_CPU(H,AWGN,Channel_Out,CodeWord);
+		AWGNChannel_CPU(H,AWGN,CComplex_sym_Channelout,CComplex_sym);
 
-		Simulation_GPU(SIM, Variablenode, Checknode, Channel_Out);
+		Simulation_GPU(SIM, Variablenode, Checknode, CComplex_sym_Channelout);
 
-		Statistic(SIM,CodeWord,CodeWord,H);
+		Statistic(SIM,CodeWord_sym,CodeWord_sym,H);
 
 		// for(int i=0;i<H->Variablenode_num;i++)
 		// {
-		// 	printf("%f ",Channel_Out[i]);
+		// 	printf("%f + %f i\n",CComplex_sym_Channelout[i].Real,CComplex_sym_Channelout[i].Image);
 		// }
 		// printf("\n");
 		// exit(0);
 	}
+
+	free(AWGN);
+	free(SIM);
+	free(H);
+	free(Checknode);
+	free(Variablenode);
+	free(CodeWord_sym);
+	free(CodeWord_bit);
+	free(CComplex_sym);
+	free(CComplex_sym_Channelout);
+	free(CONSTELLATION);
 
 	return 0;
 }
