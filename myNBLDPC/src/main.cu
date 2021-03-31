@@ -46,9 +46,6 @@ int main()
 	CComplex* CComplex_sym;
 	CComplex_sym=(CComplex* )malloc(H->Variablenode_num*sizeof(CComplex));
 
-	CComplex* CComplex_sym_Channelout;
-	CComplex_sym_Channelout=(CComplex* )malloc(H->Variablenode_num*sizeof(CComplex));
-
 	int* CodeWord_bit;
 	CodeWord_bit=(int* )malloc(H->length*sizeof(int));
 	memset(CodeWord_bit,0,H->length*sizeof(int));
@@ -83,9 +80,8 @@ int main()
 		SIM->num_Alarm_Frames = 0;
 
 		// BPSK(H,BPSK_Out,CodeWord);
-		AWGNChannel_CPU(H,AWGN,CComplex_sym_Channelout,CComplex_sym);
 
-		Simulation_GPU(SIM, Variablenode, Checknode, CComplex_sym_Channelout);
+		Simulation_GPU(H,AWGN,SIM,CONSTELLATION,Variablenode, Checknode, CComplex_sym);
 
 		Statistic(SIM,CodeWord_sym,CodeWord_sym,H);
 
@@ -105,7 +101,6 @@ int main()
 	free(CodeWord_sym);
 	free(CodeWord_bit);
 	free(CComplex_sym);
-	free(CComplex_sym_Channelout);
 	free(CONSTELLATION);
 
 	return 0;

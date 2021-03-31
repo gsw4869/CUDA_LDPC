@@ -12,13 +12,21 @@
 * AWGN:AWGNChannel类变量，包含噪声种子等
 * 
 */
-void Simulation_GPU(Simulation* SIM, VN* Variablenode, CN* Checknode, CComplex* CComplex_sym_Channelout)
-{	
-	// while (SIM->num_Frames<50)
-	// {
-	// 	SIM->num_Frames += 1;
-	// }
-	SIM->num_Frames = 40960;
+void Simulation_GPU(LDPCCode* H,AWGNChannel* AWGN,Simulation* SIM, CComplex* CONSTELLATION,VN* Variablenode, CN* Checknode, CComplex* CComplex_sym)
+{
+
+	CComplex* CComplex_sym_Channelout;
+	CComplex_sym_Channelout=(CComplex* )malloc(H->Variablenode_num*sizeof(CComplex));
+
+	while (SIM->num_Frames<50)
+	{
+		SIM->num_Frames += 1;
+
+		AWGNChannel_CPU(H,AWGN,CComplex_sym_Channelout,CComplex_sym);
+
+		Demodulate(H,AWGN,CONSTELLATION,Variablenode,CComplex_sym_Channelout);
+
+	}
 }
 
 /*
@@ -132,6 +140,8 @@ void Get_H(LDPCCode* H,VN* Variablenode,CN* Checknode)
 		default: printf("error");exit(0);
 	}
 	
+	
+
 	H->length=H->Variablenode_num*H->q_bit;
 
 
@@ -146,6 +156,7 @@ void Get_H(LDPCCode* H,VN* Variablenode,CN* Checknode)
 		Variablenode[i].weight=index1;
 		Variablenode[i].linkCNs=(int *)malloc(Variablenode[i].weight*sizeof(int));
 		Variablenode[i].linkCNs_GF=(int *)malloc(Variablenode[i].weight*sizeof(int));
+		Variablenode[i].LLR=(float* )malloc((H->GF-1)*sizeof(float));
 	}
 
 	

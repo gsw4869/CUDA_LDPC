@@ -1,7 +1,7 @@
 #include "define.cuh"
 #include "struct.cuh"
 
-void Simulation_GPU(Simulation* SIM, VN* Variablenode, CN* Checknode, CComplex* CComplex_sym_Channelout);
+void Simulation_GPU(LDPCCode* H,AWGNChannel* AWGN,Simulation* SIM, CComplex* CONSTELLATION,VN* Variablenode, CN* Checknode, CComplex* CComplex_sym);
 
 void WriteLogo(AWGNChannel* AWGN, Simulation* SIM);
 

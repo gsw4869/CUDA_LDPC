@@ -45,7 +45,7 @@
 #define	snrtype				0									// 0--Eb/No; 1--Es/No
 
 /*�������*/
-#define	startSNR		    0
+#define	startSNR		    5
 #define	stepSNR				1
 #define	stopSNR				13.0
 

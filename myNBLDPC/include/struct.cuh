@@ -25,6 +25,7 @@ typedef struct
 	int *linkCNs;
 	int *linkCNs_GF;
 	int weight;
+	float *LLR;
 }VN;
 typedef struct
 {
