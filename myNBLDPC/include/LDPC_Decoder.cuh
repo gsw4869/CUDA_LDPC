@@ -1,3 +1,6 @@
+#ifndef _LDPC_DECODER_CUH
+#define _LDPC_DECODER_CUH
+
 #include "define.cuh"
 #include "struct.cuh"
 
@@ -14,3 +17,5 @@ __global__ void Checknode_Kernel(float* Memory_RQ,int* Weight_Checknode);
 __global__ void Checknode_Shared_Kernel(float* Memory_RQ, int* Weight_Checknode);
 
 __device__ void sortQ(float* MinQ, float* SubMinQ, float* Q, int Weight);
+
+#endif

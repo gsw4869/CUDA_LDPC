@@ -14,6 +14,8 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
+typedef unsigned u32;
+
 /*LDPC码相关参数*/
 
 

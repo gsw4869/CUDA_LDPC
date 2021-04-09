@@ -1,3 +1,6 @@
+#ifndef _LDPC_ENCODER_CUH
+#define _LDPC_ENCODER_CUH
+
 #include "define.cuh"
 #include "struct.cuh"
 
@@ -8,3 +11,5 @@ void Modulate(LDPCCode* H,CComplex* CONSTELLATION,CComplex* CComplex_sym,int* Co
 void AWGNChannel_CPU(LDPCCode* H, AWGNChannel* AWGN, CComplex* CComplex_sym_Channelout,CComplex* CComplex_sym);
 
 float RandomModule(int* seed);
+
+#endif

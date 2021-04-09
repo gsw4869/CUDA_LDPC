@@ -1,3 +1,6 @@
+#ifndef _SIMULATION_CUH_
+#define _SIMULATION_CUH_
+
 #include "define.cuh"
 #include "struct.cuh"
 
@@ -12,3 +15,5 @@ CComplex* Get_CONSTELLATION(LDPCCode* H);
 void Get_H(LDPCCode* H,VN* Variablenode,CN* Checknode);
 
 void Transform_H(int* H, int* Weight_Checknode, int* Weight_Variablenode, int* Address_Variablenode);
+
+#endif

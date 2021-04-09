@@ -6,6 +6,7 @@
 #include "device_launch_parameters.h"
 #include "LDPC_Decoder.cuh"
 #include "LDPC_Encoder.cuh"
+#include "GF.cuh"
 
 int main()
 {
@@ -40,6 +41,15 @@ int main()
 //
 	Get_H(H,Variablenode,Checknode);//初始化剩下的参数
 	
+	GFInitial(H->GF);
+
+	for(int i=0;i<H->GF*H->GF;i++)
+	{
+		printf("%d ",TableAdd[i/H->GF][i%H->GF]);
+	}
+	printf("\n");
+	exit(0);
+
 	CComplex* CONSTELLATION;
 	CONSTELLATION=Get_CONSTELLATION(H);
 
