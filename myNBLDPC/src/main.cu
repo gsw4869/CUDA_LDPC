@@ -22,12 +22,11 @@ int main()
 	H=(LDPCCode* )malloc(sizeof(LDPCCode));
 
 //	先读取行数和列数,分配空间
-	char file[100]="Tanner_74_9_Z128_GF16.txt";
 	FILE* fp_H;
 	
-	if (NULL == (fp_H = fopen(file, "r")))
+	if (NULL == (fp_H = fopen(Matrixfile, "r")))
 	{
-		printf("can not open file: %s\n", file);
+		printf("can not open file: %s\n", Matrixfile);
 		exit(0);
 	}
 

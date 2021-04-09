@@ -75,22 +75,23 @@ int Statistic(Simulation* SIM, int* CodeWord_Frames, int* D,LDPCCode *H)
 CComplex* Get_CONSTELLATION(LDPCCode* H)
 {
 	CComplex* CONSTELLATION = new CComplex[H->GF];
-	char file[100]="./Constellation/GRAY_64QAM.txt";
+
+	char temp[100];
 	FILE* fp_H;
-	if (NULL == (fp_H = fopen(file, "r")))
+	if (NULL == (fp_H = fopen(Constellationfile, "r")))
 	{
-		printf("can not open file: %s\n", file);
+		printf("can not open file: %s\n", Constellationfile);
 		exit(0);
 	}
 
 	int index;
 	for (int k = 0; k < H->GF; k++)
 	{
-		fscanf(fp_H, "%s", file);
+		fscanf(fp_H, "%s", temp);
 		fscanf(fp_H, "%d", &index);
-		fscanf(fp_H, "%s", file);
+		fscanf(fp_H, "%s", temp);
 		fscanf(fp_H, "%f", &CONSTELLATION[index].Real);// GF域
-		fscanf(fp_H, "%s", file);
+		fscanf(fp_H, "%s", temp);
 		fscanf(fp_H, "%f", &CONSTELLATION[index].Image);// GF域
 	}
 	fclose(fp_H);
@@ -108,12 +109,12 @@ Address_Checknode:校验节点相连的变量节点的序号
 void Get_H(LDPCCode* H,VN* Variablenode,CN* Checknode)
 {
 	int index1;
-	char file[100]="BDS.576.288.GF.64.txt";
+	
 	FILE* fp_H;
 	
-	if (NULL == (fp_H = fopen(file, "r")))
+	if (NULL == (fp_H = fopen(Matrixfile, "r")))
 	{
-		printf("can not open file: %s\n", file);
+		printf("can not open file: %s\n", Matrixfile);
 		exit(0);
 	}
 

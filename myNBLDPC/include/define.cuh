@@ -15,6 +15,8 @@
 #include "device_launch_parameters.h"
 
 typedef unsigned u32;
+#define Matrixfile "BDS.576.288.GF.64.txt"
+#define Constellationfile "./Constellation/GRAY_64QAM.txt"
 
 /*LDPC码相关参数*/
 
