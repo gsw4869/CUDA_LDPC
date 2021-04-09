@@ -17,8 +17,8 @@ typedef struct
 	int Variablenode_num;
 	int Checknode_num;
 	float rate;
-	int length;
-	int q_bit;
+	int bit_length;//比特长度
+	int q_bit;//=log2(GF)
 }LDPCCode;
 typedef struct
 {
@@ -26,12 +26,15 @@ typedef struct
 	int *linkCNs_GF;
 	int weight;
 	float *LLR;
+	float **Entr_v2c;//变量节点传给变量节点的值，[连接的节点的序号][各GF对应的LLR]
+	float **sort_Entr_v2c;//将GF（q）的元素排序，[连接的节点的序号][GF元素]
 }VN;
 typedef struct
 {
 	int *linkVNs;
 	int *linkVNs_GF;
 	int weight;
+	float **L_c2v;//校验节点传给变量节点的值，[连接的节点的序号][各GF对应的LLR]
 }CN;
 typedef struct
 {

@@ -56,8 +56,8 @@ int main()
 	CComplex_sym=(CComplex* )malloc(H->Variablenode_num*sizeof(CComplex));
 
 	int* CodeWord_bit;
-	CodeWord_bit=(int* )malloc(H->length*sizeof(int));
-	memset(CodeWord_bit,0,H->length*sizeof(int));
+	CodeWord_bit=(int* )malloc(H->bit_length*sizeof(int));
+	memset(CodeWord_bit,0,H->bit_length*sizeof(int));
 
 	int* CodeWord_sym;
 	CodeWord_sym=(int* )malloc(H->Variablenode_num*sizeof(int));

@@ -38,7 +38,7 @@ int Statistic(Simulation* SIM, int* CodeWord_Frames, int* D,LDPCCode *H)
 	int Error_msgBit=0;	
 
 	
-	for (index1 = 0; index1 < H->length; index1++)
+	for (index1 = 0; index1 < H->Variablenode_num; index1++)
 	{
 		Error_msgBit = (D[index1] != CodeWord_Frames[index1]) ? Error_msgBit + 1 : Error_msgBit;
 	}
@@ -51,7 +51,7 @@ int Statistic(Simulation* SIM, int* CodeWord_Frames, int* D,LDPCCode *H)
 	
 	if (SIM->num_Frames % displayStep == 0)
 	{
-		SIM->BER = ((double)SIM->num_Error_Bits / (double)(SIM->num_Frames)) / (double)(H->length);
+		SIM->BER = ((double)SIM->num_Error_Bits / (double)(SIM->num_Frames)) / (double)(H->Variablenode_num);
 		SIM->FER = (double)SIM->num_Error_Frames / (double)SIM->num_Frames;
 		SIM->AverageIT = (double)SIM->Total_Iteration / (double)SIM->num_Frames;
 		// SIM->FER_Alarm = (double)SIM->num_Alarm_Frames / (double)SIM->num_Frames;
@@ -61,7 +61,7 @@ int Statistic(Simulation* SIM, int* CodeWord_Frames, int* D,LDPCCode *H)
 
 	if (SIM->num_Error_Frames >= leastErrorFrames && SIM->num_Frames >= leastTestFrames)
 	{
-		SIM->BER = ((double)SIM->num_Error_Bits / (double)(SIM->num_Frames)) / (double)(H->length);
+		SIM->BER = ((double)SIM->num_Error_Bits / (double)(SIM->num_Frames)) / (double)(H->Variablenode_num);
 		SIM->FER = (double)SIM->num_Error_Frames / (double)SIM->num_Frames;
 		SIM->AverageIT = (double)SIM->Total_Iteration / (double)SIM->num_Frames;
 		// SIM->FER_Alarm = (double)SIM->num_Alarm_Frames / (double)SIM->num_Frames;
@@ -143,7 +143,7 @@ void Get_H(LDPCCode* H,VN* Variablenode,CN* Checknode)
 	
 	
 
-	H->length=H->Variablenode_num*H->q_bit;
+	H->bit_length=H->Variablenode_num*H->q_bit;
 
 
 	fscanf(fp_H, "%d", &H->maxWeight_variablenode);//最大行重
