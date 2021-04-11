@@ -42,13 +42,6 @@ int main()
 	
 	GFInitial(H->GF);
 
-	for(int i=0;i<H->GF*H->GF;i++)
-	{
-		printf("%d ",TableAdd[i/H->GF][i%H->GF]);
-	}
-	printf("\n");
-	exit(0);
-
 	CComplex* CONSTELLATION;
 	CONSTELLATION=Get_CONSTELLATION(H);
 
@@ -59,9 +52,19 @@ int main()
 	CodeWord_bit=(int* )malloc(H->bit_length*sizeof(int));
 	memset(CodeWord_bit,0,H->bit_length*sizeof(int));
 
+	for(int i=0;i<H->bit_length;i++)
+	{
+		CodeWord_bit[i]=1;
+	}
+
 	int* CodeWord_sym;
 	CodeWord_sym=(int* )malloc(H->Variablenode_num*sizeof(int));
 	memset(CodeWord_sym,0,H->Variablenode_num*sizeof(int));
+
+
+	int* DecodeOutput;
+	DecodeOutput=(int* )malloc(H->Variablenode_num*sizeof(int));
+	memset(DecodeOutput,0,H->Variablenode_num*sizeof(int));
 
 	BitToSym(H,CodeWord_sym,CodeWord_bit);
 	Modulate(H,CONSTELLATION,CComplex_sym,CodeWord_sym);
@@ -90,9 +93,9 @@ int main()
 
 		// BPSK(H,BPSK_Out,CodeWord);
 
-		Simulation_GPU(H,AWGN,SIM,CONSTELLATION,Variablenode, Checknode, CComplex_sym);
+		Simulation_GPU(H,AWGN,SIM,CONSTELLATION,Variablenode, Checknode, CComplex_sym,DecodeOutput);
 
-		Statistic(SIM,CodeWord_sym,CodeWord_sym,H);
+		Statistic(SIM,CodeWord_sym,DecodeOutput,H);
 
 		// for(int i=0;i<H->Variablenode_num;i++)
 		// {

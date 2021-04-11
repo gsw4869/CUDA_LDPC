@@ -12,19 +12,21 @@
 * AWGN:AWGNChannel类变量，包含噪声种子等
 * 
 */
-void Simulation_GPU(LDPCCode* H,AWGNChannel* AWGN,Simulation* SIM, CComplex* CONSTELLATION,VN* Variablenode, CN* Checknode, CComplex* CComplex_sym)
+void Simulation_GPU(LDPCCode* H,AWGNChannel* AWGN,Simulation* SIM, CComplex* CONSTELLATION,VN* Variablenode, CN* Checknode, CComplex* CComplex_sym,int *DecodeOutput)
 {
 
 	CComplex* CComplex_sym_Channelout;
 	CComplex_sym_Channelout=(CComplex* )malloc(H->Variablenode_num*sizeof(CComplex));
-
 	while (SIM->num_Frames<50)
 	{
+		printf("%d\n",SIM->num_Frames);
 		SIM->num_Frames += 1;
 
 		AWGNChannel_CPU(H,AWGN,CComplex_sym_Channelout,CComplex_sym);
 
 		Demodulate(H,AWGN,CONSTELLATION,Variablenode,CComplex_sym_Channelout);
+	
+		Decoding_EMS(H,Variablenode,Checknode,H->GF,H->maxWeight_checknode,DecodeOutput);
 
 	}
 }
@@ -146,9 +148,9 @@ void Get_H(LDPCCode* H,VN* Variablenode,CN* Checknode)
 	H->bit_length=H->Variablenode_num*H->q_bit;
 
 
-	fscanf(fp_H, "%d", &H->maxWeight_variablenode);//最大行重
+	fscanf(fp_H, "%d", &H->maxWeight_variablenode);//变量节点相连的校验节点的个数
 
-	fscanf(fp_H, "%d", &H->maxWeight_checknode);//最大列重
+	fscanf(fp_H, "%d", &H->maxWeight_checknode);//校验节点相连的变量节点的个数
 
 
 	for(int i=0;i<H->Variablenode_num;i++)
@@ -158,6 +160,9 @@ void Get_H(LDPCCode* H,VN* Variablenode,CN* Checknode)
 		Variablenode[i].linkCNs=(int *)malloc(Variablenode[i].weight*sizeof(int));
 		Variablenode[i].linkCNs_GF=(int *)malloc(Variablenode[i].weight*sizeof(int));
 		Variablenode[i].LLR=(float* )malloc((H->GF-1)*sizeof(float));
+		Variablenode[i].Entr_v2c=malloc_2_float(Variablenode[i].weight,H->GF);
+		Variablenode[i].sort_L_v2c=malloc_2_float(Variablenode[i].weight,H->GF);
+		Variablenode[i].sort_Entr_v2c=malloc_2(Variablenode[i].weight,H->GF);
 	}
 
 	
@@ -167,6 +172,8 @@ void Get_H(LDPCCode* H,VN* Variablenode,CN* Checknode)
 		Checknode[i].weight=index1;
 		Checknode[i].linkVNs=(int *)malloc(Checknode[i].weight*sizeof(int));
 		Checknode[i].linkVNs_GF=(int *)malloc(Checknode[i].weight*sizeof(int));
+		Checknode[i].L_c2v=malloc_2_float(Checknode[i].weight,H->GF);
+
 	}
 	
 	for(int i=0;i<H->Variablenode_num;i++)
@@ -174,7 +181,7 @@ void Get_H(LDPCCode* H,VN* Variablenode,CN* Checknode)
 		for(int j=0;j<Variablenode[i].weight;j++)
 		{
 			fscanf(fp_H, "%d", &index1);
-			Variablenode[i].linkCNs[j]=index1;
+			Variablenode[i].linkCNs[j]=index1-1;
 			fscanf(fp_H, "%d", &index1);
 			Variablenode[i].linkCNs_GF[j]=index1;
 
@@ -186,7 +193,7 @@ void Get_H(LDPCCode* H,VN* Variablenode,CN* Checknode)
 		for(int j=0;j<Checknode[i].weight;j++)
 		{
 			fscanf(fp_H, "%d", &index1);
-			Checknode[i].linkVNs[j]=index1;
+			Checknode[i].linkVNs[j]=index1-1;
 			fscanf(fp_H, "%d", &index1);
 			Checknode[i].linkVNs_GF[j]=index1;
 

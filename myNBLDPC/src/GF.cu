@@ -15,14 +15,25 @@
 #include <assert.h>
 using namespace std;
 
-u32 **TableAdd;
-u32 **TableMultiply;
-u32 *TableInverse;
+unsigned **TableAdd;
+unsigned **TableMultiply;
+unsigned *TableInverse;
 
-u32 **malloc_2(int xDim, int yDim) {
-    u32 **a = (u32 **)malloc(xDim * sizeof(u32 *));
-    a[0] = (u32 *)malloc(xDim * yDim * sizeof(u32));
-    memset(a[0], 0, xDim * yDim * sizeof(u32));
+unsigned **malloc_2(int xDim, int yDim) {
+    unsigned **a = (unsigned **)malloc(xDim * sizeof(unsigned *));
+    a[0] = (unsigned *)malloc(xDim * yDim * sizeof(unsigned));
+    memset(a[0], 0, xDim * yDim * sizeof(unsigned));
+    for (int i = 1; i < xDim; i++) {
+        a[i] = a[i - 1] + yDim;
+    }
+    assert(a != NULL);
+    return a;
+}
+
+float **malloc_2_float(int xDim, int yDim) {
+    float **a = (float **)malloc(xDim * sizeof(float *));
+    a[0] = (float *)malloc(xDim * yDim * sizeof(float));
+    memset(a[0], 0, xDim * yDim * sizeof(float));
     for (int i = 1; i < xDim; i++) {
         a[i] = a[i - 1] + yDim;
     }
@@ -60,7 +71,7 @@ bool GFInitial(int GFq)
 	// allocate memory space
 	TableAdd = malloc_2(q,q); 
 	TableMultiply = malloc_2(q,q);
-	TableInverse = new u32 [q];
+	TableInverse = new unsigned [q];
 	
 	// read profile
 	stringstream ss;
