@@ -109,7 +109,7 @@ int Decoding_EMS(LDPCCode* H,VN* Variablenode,CN* Checknode,int EMS_Nm,int EMS_N
 		for(int d = 0; d < Variablenode[col].weight; d ++)
 		{
 			// CopyLLRVector(L_v2c[col][d], L_ch[col]);
-			for(int q=0;q<H->GF-1;q++)
+			for(int q=0;q<H->GF;q++)
 			{
 				Variablenode[col].Entr_v2c[d][q]=Variablenode[col].LLR[q];
 			}
@@ -128,11 +128,9 @@ int Decoding_EMS(LDPCCode* H,VN* Variablenode,CN* Checknode,int EMS_Nm,int EMS_N
 
 	int iter_number = 0;
 	bool decode_correct = true;
-	// while(iter_number ++ < maxIT)
-	while(1)
+	while(iter_number ++ < maxIT)
 	{
-		iter_number ++;
-		printf("it_time: %d\n",iter_number);
+		// printf("it_time: %d\n",iter_number);
 		for(int col=0;col<H->Variablenode_num;col++)
 		{
 			for(int d = 0; d < Variablenode[col].weight; d ++)
@@ -151,15 +149,15 @@ int Decoding_EMS(LDPCCode* H,VN* Variablenode,CN* Checknode,int EMS_Nm,int EMS_N
 			// 	printf("\n");
 			// }
 			DecodeOutput[col]=DecideLLRVector(Variablenode[col].LLR,H->GF);
-			printf("%d ",DecodeOutput[col]);
+			// printf("%d ",DecodeOutput[col]);
 		}
-		printf("\n");
+		// printf("\n");
 		// exit(0);
 
 		decode_correct = true;
 		for(int col=0;col<H->Variablenode_num;col++)
 		{
-			if(DecodeOutput[col]!=63)
+			if(DecodeOutput[col])
 			{
 				decode_correct = false;
 				break;

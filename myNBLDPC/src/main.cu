@@ -52,11 +52,6 @@ int main()
 	CodeWord_bit=(int* )malloc(H->bit_length*sizeof(int));
 	memset(CodeWord_bit,0,H->bit_length*sizeof(int));
 
-	for(int i=0;i<H->bit_length;i++)
-	{
-		CodeWord_bit[i]=1;
-	}
-
 	int* CodeWord_sym;
 	CodeWord_sym=(int* )malloc(H->Variablenode_num*sizeof(int));
 	memset(CodeWord_sym,0,H->Variablenode_num*sizeof(int));
@@ -93,9 +88,7 @@ int main()
 
 		// BPSK(H,BPSK_Out,CodeWord);
 
-		Simulation_GPU(H,AWGN,SIM,CONSTELLATION,Variablenode, Checknode, CComplex_sym,DecodeOutput);
-
-		Statistic(SIM,CodeWord_sym,DecodeOutput,H);
+		Simulation_GPU(H,AWGN,SIM,CONSTELLATION,Variablenode, Checknode, CComplex_sym,CodeWord_sym,DecodeOutput);
 
 		// for(int i=0;i<H->Variablenode_num;i++)
 		// {

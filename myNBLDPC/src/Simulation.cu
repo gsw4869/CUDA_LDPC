@@ -12,21 +12,23 @@
 * AWGN:AWGNChannel类变量，包含噪声种子等
 * 
 */
-void Simulation_GPU(LDPCCode* H,AWGNChannel* AWGN,Simulation* SIM, CComplex* CONSTELLATION,VN* Variablenode, CN* Checknode, CComplex* CComplex_sym,int *DecodeOutput)
+void Simulation_GPU(LDPCCode* H,AWGNChannel* AWGN,Simulation* SIM, CComplex* CONSTELLATION,VN* Variablenode, CN* Checknode, CComplex* CComplex_sym,int* CodeWord_sym,int *DecodeOutput)
 {
 
 	CComplex* CComplex_sym_Channelout;
 	CComplex_sym_Channelout=(CComplex* )malloc(H->Variablenode_num*sizeof(CComplex));
-	while (SIM->num_Frames<50)
+	while (SIM->num_Error_Frames<leastErrorFrames)
 	{
-		printf("%d\n",SIM->num_Frames);
+		// printf("%d\n",SIM->num_Frames);
 		SIM->num_Frames += 1;
 
 		AWGNChannel_CPU(H,AWGN,CComplex_sym_Channelout,CComplex_sym);
 
 		Demodulate(H,AWGN,CONSTELLATION,Variablenode,CComplex_sym_Channelout);
 	
-		Decoding_EMS(H,Variablenode,Checknode,H->GF,H->maxWeight_checknode,DecodeOutput);
+		Decoding_EMS(H,Variablenode,Checknode,H->GF/2,2,DecodeOutput);
+
+		Statistic(SIM,CodeWord_sym,DecodeOutput,H);
 
 	}
 }

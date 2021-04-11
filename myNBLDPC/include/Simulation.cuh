@@ -5,7 +5,7 @@
 #include "struct.cuh"
 #include "GF.cuh"
 
-void Simulation_GPU(LDPCCode* H,AWGNChannel* AWGN,Simulation* SIM, CComplex* CONSTELLATION,VN* Variablenode, CN* Checknode, CComplex* CComplex_sym,int *DecodeOutput);
+void Simulation_GPU(LDPCCode* H,AWGNChannel* AWGN,Simulation* SIM, CComplex* CONSTELLATION,VN* Variablenode, CN* Checknode, CComplex* CComplex_sym,int* CodeWord_sym,int *DecodeOutput);
 
 void WriteLogo(AWGNChannel* AWGN, Simulation* SIM);
 
