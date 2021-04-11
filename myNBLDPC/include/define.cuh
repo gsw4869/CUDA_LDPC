@@ -49,9 +49,9 @@
 #define	snrtype				0									// 0--Eb/No; 1--Es/No
 
 /*�������*/
-#define	startSNR		    15
+#define	startSNR		    10
 #define	stepSNR				2
-#define	stopSNR				1000.0
+#define	stopSNR				14.0
 
 #define	leastErrorFrames		50									// 最少错误帧数
 #define	leastTestFrames		    10000								// 最少仿真帧数

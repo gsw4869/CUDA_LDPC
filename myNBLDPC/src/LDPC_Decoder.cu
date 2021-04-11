@@ -142,6 +142,14 @@ int Decoding_EMS(LDPCCode* H,VN* Variablenode,CN* Checknode,int EMS_Nm,int EMS_N
 					Variablenode[col].LLR[q]+=Checknode[Variablenode[col].linkCNs[d]].L_c2v[index_in_CN(Variablenode,col,d,Checknode)][q];
 				}				
 			}
+			// if(col==1)
+			// {
+			// 	for(int q=0;q<H->GF;q++)
+			// 	{
+			// 		printf("%f ",Variablenode[col].LLR[q]);
+			// 	}
+			// 	printf("\n");
+			// }
 			DecodeOutput[col]=DecideLLRVector(Variablenode[col].LLR,H->GF);
 			printf("%d ",DecodeOutput[col]);
 		}
@@ -193,6 +201,8 @@ int Decoding_EMS(LDPCCode* H,VN* Variablenode,CN* Checknode,int EMS_Nm,int EMS_N
 				}
 			}
 		}
+		float* EMS_L_c2v=(float* )malloc(H->GF*sizeof(float));
+
 		// message from check to var
 		for(int row = 0; row < H->Checknode_num; row ++)
 		{
@@ -202,83 +212,73 @@ int Decoding_EMS(LDPCCode* H,VN* Variablenode,CN* Checknode,int EMS_Nm,int EMS_N
 				// reset the sum store vector to the munimum
 				for(int q = 0; q < H->GF; q ++)
 				{
-					Checknode[row].L_c2v[dc][q] = -DBL_MAX;
+					EMS_L_c2v[q] = -DBL_MAX;
 				}
 				
 				// recursly exhaustly
 				int sumNonele, diff;
-				double sumNonLLR;
+				float sumNonLLR;
 				// conf(q, 1)
 				sumNonele = 0; sumNonLLR = 0; diff = 0;
-				ConstructConf(Checknode,Variablenode,H->GF, 1, sumNonele, sumNonLLR, diff, 0, dc, Checknode[row].weight - 1, row);
+				ConstructConf(Checknode,Variablenode,H->GF, 1, sumNonele, sumNonLLR, diff, 0, dc, Checknode[row].weight - 1, row,EMS_L_c2v);
 
 				
 
 				// conf(nm, nc)
 				sumNonele = 0; sumNonLLR = 0; diff = 0;
-				ConstructConf(Checknode,Variablenode,EMS_Nm, EMS_Nc, sumNonele, sumNonLLR, diff, 0, dc, Checknode[row].weight - 1, row);
+				ConstructConf(Checknode,Variablenode,EMS_Nm, EMS_Nc, sumNonele, sumNonLLR, diff, 0, dc, Checknode[row].weight - 1, row,EMS_L_c2v);
 			
 
 				// calculate each c2v LLR
-				// int v = 0;
-				// for(int k = 1; k < H->GF; k ++)
-				// {
-				// 	v = GFMultiply(k, Checknode[row].linkVNs[dc]);
-				// 	Checknode[row].L_c2v[dc][k - 1] = (Checknode[row].EMS_L_c2v[v] - EMS_L_c2v[0]) / EMS_Correction_Factor;
-				// 	if(Checknode[row].L_c2v[dc][k - 1] < -1 * EMS_Correction_Offset)
-				// 	{
-				// 		Checknode[row].L_c2v[dc][k - 1] = Checknode[row].L_c2v[dc][k - 1] + EMS_Correction_Offset;
-				// 	}
-				// 	else if(Checknode[row].L_c2v[dc][k - 1] >  EMS_Correction_Offset)
-				// 	{
-				// 		Checknode[row].L_c2v[dc][k - 1] = Checknode[row].L_c2v[dc][k - 1] - EMS_Correction_Offset;
-				// 	}
-				// 	else
-				// 	{
-				// 		Checknode[row].L_c2v[dc][k - 1] = 0;
-				// 	}
-				// }
+				int v = 0;
+				for(int k = 1; k < H->GF; k ++)
+				{
+					v = GFMultiply(k, Checknode[row].linkVNs_GF[dc]);
+					Checknode[row].L_c2v[dc][k - 1] = (EMS_L_c2v[v] - EMS_L_c2v[0])/1.2;
+				}
 			}
 		}
+		free(EMS_L_c2v);
 
 	}
 	return 0;
 
 }
 
-int ConstructConf(CN *Checknode,VN *Variablenode,int Nm, int Nc, int& sumNonele, double& sumNonLLR, int& diff, int begin, int except, int end, int row)
+int ConstructConf(CN *Checknode,VN *Variablenode,int Nm, int Nc, int& sumNonele, float& sumNonLLR, int& diff, int begin, int except, int end, int row,float* EMS_L_c2v)
 {
-    int index=index_in_VN(Checknode,row,except,Variablenode);
+	int index;
 	if (begin > end)
 	{
-		if (sumNonLLR > Checknode[row].L_c2v[except][sumNonele])
+		if (sumNonLLR > EMS_L_c2v[sumNonele])
 		{
-			Checknode[row].L_c2v[except][sumNonele] = sumNonLLR;
+			EMS_L_c2v[sumNonele] = sumNonLLR;
 		}
 	}
 	else if (begin == except)
 	{
-		ConstructConf(Checknode, Variablenode, Nm, Nc, sumNonele, sumNonLLR, diff, begin + 1, except, end, row);
+		ConstructConf(Checknode, Variablenode, Nm, Nc, sumNonele, sumNonLLR, diff, begin + 1, except, end, row, EMS_L_c2v);
 		return 0;
 	}
 	else
 	{
+		index=index_in_VN(Checknode,row,begin,Variablenode);
 		for (int k = 0; k < Nm; k++)
 		{
-			sumNonele = GFAdd(GFMultiply(Variablenode[Checknode[row].linkVNs[begin]].sort_Entr_v2c[index][k], Checknode->linkVNs_GF[begin]), sumNonele);
-			sumNonLLR = sumNonLLR + Variablenode[Checknode[row].linkVNs[begin]].sort_L_v2c[index][begin];
+			sumNonele = GFAdd(GFMultiply(Variablenode[Checknode[row].linkVNs[begin]].sort_Entr_v2c[index][k], Checknode[row].linkVNs_GF[begin]), sumNonele);
+			sumNonLLR = sumNonLLR + Variablenode[Checknode[row].linkVNs[begin]].sort_L_v2c[index][k];
 			diff += (k != 0) ? 1 : 0;
 			if (diff <= Nc)
 			{
-				ConstructConf(Checknode, Variablenode, Nm, Nc, sumNonele, sumNonLLR, diff, begin + 1, except, end, row);
-				sumNonele = GFAdd(GFMultiply(Variablenode[Checknode[row].linkVNs[begin]].sort_Entr_v2c[index][begin], Checknode->linkVNs_GF[begin]), sumNonele);
-				sumNonLLR = sumNonLLR - Variablenode[Checknode[row].linkVNs[begin]].sort_L_v2c[index][begin];
+				ConstructConf(Checknode, Variablenode, Nm, Nc, sumNonele, sumNonLLR, diff, begin + 1, except, end, row, EMS_L_c2v);
+				sumNonele = GFAdd(GFMultiply(Variablenode[Checknode[row].linkVNs[begin]].sort_Entr_v2c[index][k], Checknode[row].linkVNs_GF[begin]), sumNonele);
+				sumNonLLR = sumNonLLR - Variablenode[Checknode[row].linkVNs[begin]].sort_L_v2c[index][k];
 				diff -= (k != 0) ? 1 : 0;
 			}
 			else
 			{
-				sumNonele = GFAdd(GFMultiply(Variablenode[Checknode[row].linkVNs[begin]].sort_Entr_v2c[index][begin], Checknode->linkVNs_GF[begin]), sumNonele);
-				sumNonLLR = sumNonLLR - Variablenode[Checknode[row].linkVNs[begin]].sort_L_v2c[index][begin];
+				sumNonele = GFAdd(GFMultiply(Variablenode[Checknode[row].linkVNs[begin]].sort_Entr_v2c[index][k], Checknode[row].linkVNs_GF[begin]), sumNonele);
+				sumNonLLR = sumNonLLR - Variablenode[Checknode[row].linkVNs[begin]].sort_L_v2c[index][k];
 				diff -= (k != 0) ? 1 : 0;
 				break;
 			}
