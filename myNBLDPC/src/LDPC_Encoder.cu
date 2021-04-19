@@ -22,7 +22,7 @@ void Modulate(LDPCCode* H,CComplex* CONSTELLATION,CComplex* CComplex_sym,int* Co
 	{
 		CComplex_sym[s].Real = CONSTELLATION[CodeWord_sym[s]].Real;
 		CComplex_sym[s].Image = CONSTELLATION[CodeWord_sym[s]].Image;
-	}	
+	}
 }
 /*
 * CodeWord：原始码组
@@ -39,13 +39,13 @@ void AWGNChannel_CPU(LDPCCode* H, AWGNChannel* AWGN, CComplex* CComplex_sym_Chan
 		u2 = RandomModule(AWGN->seed);
 
 		temp = (float)sqrt((float)(-2) * log((float)1 - u1));
-		CComplex_sym_Channelout[index0].Real = (AWGN->sigma) * sin(2 * PI * u2) * temp + CComplex_sym[index0].Real;//产生高斯白噪声信号(https://www.cnblogs.com/tsingke/p/6194737.html)
+		CComplex_sym_Channelout[index0].Real = (AWGN->sigma) * cos(2 * PI * u2) * temp + CComplex_sym[index0].Real;//产生高斯白噪声信号(https://www.cnblogs.com/tsingke/p/6194737.html)
 
 		u1 = RandomModule(AWGN->seed);
 		u2 = RandomModule(AWGN->seed);
 
 		temp = (float)sqrt((float)(-2) * log((float)1 - u1));
-		CComplex_sym_Channelout[index0].Image = (AWGN->sigma) * sin(2 * PI * u2) * temp + CComplex_sym[index0].Image;
+		CComplex_sym_Channelout[index0].Image = (AWGN->sigma) * cos(2 * PI * u2) * temp + CComplex_sym[index0].Image;
 		
 	}
 }

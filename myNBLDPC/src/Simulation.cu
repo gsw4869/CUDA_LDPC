@@ -61,6 +61,15 @@ int Statistic(Simulation* SIM, int* CodeWord_Frames, int* D,LDPCCode *H)
 		// SIM->FER_Alarm = (double)SIM->num_Alarm_Frames / (double)SIM->num_Frames;
 		// SIM->FER_False = (double)SIM->num_False_Frames / (double)SIM->num_Frames;
 		printf(" %.1f %8d  %4d  %6.4e  %6.4e  %.2f  %6.4e %6.4e\n", SIM->SNR, SIM->num_Frames, SIM->num_Error_Frames, SIM->FER, SIM->BER, SIM->AverageIT, SIM->FER_False, SIM->FER_Alarm);
+		FILE* fp_H;
+		if (NULL == (fp_H = fopen("results.txt", "a")))
+		{
+			printf("can not open file: results.txt\n");
+			exit(0);
+		}
+		fprintf(fp_H," %.1f %8d  %4d  %6.4e  %6.4e  %.2f  %6.4e %6.4e\n", SIM->SNR, SIM->num_Frames, SIM->num_Error_Frames, SIM->FER, SIM->BER, SIM->AverageIT, SIM->FER_False, SIM->FER_Alarm);
+		fclose(fp_H);
+
 	}
 
 	if (SIM->num_Error_Frames >= leastErrorFrames && SIM->num_Frames >= leastTestFrames)
@@ -71,6 +80,14 @@ int Statistic(Simulation* SIM, int* CodeWord_Frames, int* D,LDPCCode *H)
 		// SIM->FER_Alarm = (double)SIM->num_Alarm_Frames / (double)SIM->num_Frames;
 		// SIM->FER_False = (double)SIM->num_False_Frames / (double)SIM->num_Frames;
 		printf(" %.1f %8d  %4d  %6.4e  %6.4e  %.2f  %6.4e %6.4e\n", SIM->SNR, SIM->num_Frames, SIM->num_Error_Frames, SIM->FER, SIM->BER, SIM->AverageIT, SIM->FER_False, SIM->FER_Alarm);
+		FILE* fp_H;
+		if (NULL == (fp_H = fopen("results.txt", "a")))
+		{
+			printf("can not open file: results.txt\n");
+			exit(0);
+		}
+		fprintf(fp_H," %.1f %8d  %4d  %6.4e  %6.4e  %.2f  %6.4e %6.4e\n", SIM->SNR, SIM->num_Frames, SIM->num_Error_Frames, SIM->FER, SIM->BER, SIM->AverageIT, SIM->FER_False, SIM->FER_Alarm);
+		fclose(fp_H);
 		return 1;
 	}
 	return 0;
@@ -161,6 +178,7 @@ void Get_H(LDPCCode* H,VN* Variablenode,CN* Checknode)
 		Variablenode[i].weight=index1;
 		Variablenode[i].linkCNs=(int *)malloc(Variablenode[i].weight*sizeof(int));
 		Variablenode[i].linkCNs_GF=(int *)malloc(Variablenode[i].weight*sizeof(int));
+		Variablenode[i].L_ch=(float* )malloc((H->GF-1)*sizeof(float));
 		Variablenode[i].LLR=(float* )malloc((H->GF-1)*sizeof(float));
 		Variablenode[i].Entr_v2c=malloc_2_float(Variablenode[i].weight,H->GF);
 		Variablenode[i].sort_L_v2c=malloc_2_float(Variablenode[i].weight,H->GF);

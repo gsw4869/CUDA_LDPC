@@ -73,7 +73,7 @@ int main()
 
 		if (snrtype == 0)
 		{
-			AWGN->sigma = (float)sqrt(0.5 / (H->rate * (pow(10.0, (SIM->SNR / 10.0)))));//(float)LDPC->msgLen / LDPC->codewordLen;
+			AWGN->sigma = (float)sqrt(0.5 / (6*H->rate * (pow(10.0, (SIM->SNR / 10.0)))));//(float)LDPC->msgLen / LDPC->codewordLen;
 		}
 		else if (snrtype == 1)
 		{

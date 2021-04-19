@@ -97,7 +97,7 @@ void Demodulate(LDPCCode* H,AWGNChannel* AWGN,CComplex* CONSTELLATION,VN* Variab
     {
             for(int q = 1; q < H->GF; q ++)
             {
-                Variablenode[s].LLR[q - 1] = ( (2 * CComplex_sym_Channelout[s - p_i].Real - CONSTELLATION[0].Real - CONSTELLATION[q].Real ) * (CONSTELLATION[q].Real - CONSTELLATION[0].Real) 
+                Variablenode[s].L_ch[q - 1] = ( (2 * CComplex_sym_Channelout[s - p_i].Real - CONSTELLATION[0].Real - CONSTELLATION[q].Real ) * (CONSTELLATION[q].Real - CONSTELLATION[0].Real) 
                     + (2 * CComplex_sym_Channelout[s - p_i].Image - CONSTELLATION[0].Image - CONSTELLATION[q].Image ) * (CONSTELLATION[q].Image - CONSTELLATION[0].Image) ) / (2 * AWGN->sigma * AWGN->sigma);
             }
     }
@@ -108,10 +108,9 @@ int Decoding_EMS(LDPCCode* H,VN* Variablenode,CN* Checknode,int EMS_Nm,int EMS_N
 	{
 		for(int d = 0; d < Variablenode[col].weight; d ++)
 		{
-			// CopyLLRVector(L_v2c[col][d], L_ch[col]);
 			for(int q=0;q<H->GF;q++)
 			{
-				Variablenode[col].Entr_v2c[d][q]=Variablenode[col].LLR[q];
+				Variablenode[col].Entr_v2c[d][q]=Variablenode[col].L_ch[q];
 			}
 		}
 	}
@@ -137,17 +136,19 @@ int Decoding_EMS(LDPCCode* H,VN* Variablenode,CN* Checknode,int EMS_Nm,int EMS_N
 			{
 				for(int q=0;q<H->GF-1;q++)
 				{
+					Variablenode[col].LLR[q] = Variablenode[col].L_ch[q];
+				}				
+			}
+		}
+		for(int col=0;col<H->Variablenode_num;col++)
+		{
+			for(int d = 0; d < Variablenode[col].weight; d ++)
+			{
+				for(int q=0;q<H->GF-1;q++)
+				{
 					Variablenode[col].LLR[q]+=Checknode[Variablenode[col].linkCNs[d]].L_c2v[index_in_CN(Variablenode,col,d,Checknode)][q];
 				}				
 			}
-			// if(col==1)
-			// {
-			// 	for(int q=0;q<H->GF;q++)
-			// 	{
-			// 		printf("%f ",Variablenode[col].LLR[q]);
-			// 	}
-			// 	printf("\n");
-			// }
 			DecodeOutput[col]=DecideLLRVector(Variablenode[col].LLR,H->GF);
 			// printf("%d ",DecodeOutput[col]);
 		}
@@ -199,6 +200,7 @@ int Decoding_EMS(LDPCCode* H,VN* Variablenode,CN* Checknode,int EMS_Nm,int EMS_N
 				}
 			}
 		}
+	
 		float* EMS_L_c2v=(float* )malloc(H->GF*sizeof(float));
 
 		// message from check to var
@@ -220,13 +222,11 @@ int Decoding_EMS(LDPCCode* H,VN* Variablenode,CN* Checknode,int EMS_Nm,int EMS_N
 				sumNonele = 0; sumNonLLR = 0; diff = 0;
 				ConstructConf(Checknode,Variablenode,H->GF, 1, sumNonele, sumNonLLR, diff, 0, dc, Checknode[row].weight - 1, row,EMS_L_c2v);
 
-				
 
 				// conf(nm, nc)
 				sumNonele = 0; sumNonLLR = 0; diff = 0;
 				ConstructConf(Checknode,Variablenode,EMS_Nm, EMS_Nc, sumNonele, sumNonLLR, diff, 0, dc, Checknode[row].weight - 1, row,EMS_L_c2v);
 			
-
 				// calculate each c2v LLR
 				int v = 0;
 				for(int k = 1; k < H->GF; k ++)

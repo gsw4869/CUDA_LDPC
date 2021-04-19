@@ -26,6 +26,7 @@ typedef struct
 	int *linkCNs_GF;
 	int weight;
 	float *LLR;
+	float *L_ch;
 	float **Entr_v2c;//变量节点传给校验节点的值，[连接的节点的序号][各GF对应的LLR]
 	float **sort_L_v2c;//排序过后的
 	unsigned **sort_Entr_v2c;//将GF（q）的元素排序，[连接的节点的序号][GF元素]
