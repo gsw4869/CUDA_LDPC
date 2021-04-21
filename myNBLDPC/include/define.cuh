@@ -37,7 +37,7 @@
 //#define	opt_R				(0.83)								// NMS算法中的修正因子.浮点译码器
 #define decoder_method 0 // 译码算法:0->NMS;1->BP
 
-/*AWGN����*/
+/*AWGN参数*/
 #define ix_define 173
 #define iy_define 173
 #define iz_define 173
@@ -45,7 +45,7 @@
 #define Add_noise 1 // 0--No; 1--Yes
 #define snrtype 0   // 0--Eb/No; 1--Es/No
 
-/*�������*/
+/*仿真参数*/
 #define startSNR 4
 #define stepSNR 1
 #define stopSNR 10
@@ -54,7 +54,7 @@
 #define leastTestFrames 10  // 最少仿真帧数
 #define displayStep 1000    // 定义将译码结果写入相应txt文件的频率
 
-/*CUDA c��Ӧ����*/
+/*CUDA c相应参数*/
 #define MaxThreadPerBlock 1024 // 针对GeForce GTX 1050而言.
 #define PI (3.1415926)
 #define CPU_GPU 1               // 采用CPU还是GPU进行译码:0->CPU;1->GPU
