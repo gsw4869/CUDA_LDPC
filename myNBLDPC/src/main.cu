@@ -47,7 +47,6 @@ int main()
 	CONSTELLATION = Get_CONSTELLATION(H);
 
 	CComplex *CComplex_sym;
-	CComplex_sym = (CComplex *)malloc(H->Variablenode_num * sizeof(CComplex));
 
 	int *CodeWord_bit;
 	CodeWord_bit = (int *)malloc(H->bit_length * sizeof(int));
@@ -61,15 +60,31 @@ int main()
 	DecodeOutput = (int *)malloc(H->Variablenode_num * sizeof(int));
 	memset(DecodeOutput, 0, H->Variablenode_num * sizeof(int));
 
-	BitToSym(H, CodeWord_sym, CodeWord_bit);
-
 	int CodeWord_sym_test[96] = {12, 26, 32, 18, 58, 59, 49, 24, 55, 48, 19, 14, 13, 2, 59, 15, 7, 43, 20, 8, 36, 54, 23, 7, 29, 2, 31, 43, 34, 30, 51, 57, 3, 14, 41, 38, 30, 58, 32, 26, 51, 48, 26, 23, 20, 63, 34, 51, 45, 62, 62, 13, 42, 33, 9, 61, 3, 25, 12, 51, 4, 48, 32, 48, 36, 42, 37, 14, 37, 21, 48, 39, 25, 51, 12, 23, 60, 51, 50, 15, 45, 35, 30, 23, 11, 45, 1, 25, 62, 47, 17, 25, 37, 32, 58, 56};
-	for (int i = 0; i < H->Variablenode_num; i++)
-	{
-		CodeWord_sym[i] = CodeWord_sym_test[i];
-	}
 
-	Modulate(H, CONSTELLATION, CComplex_sym, CodeWord_sym);
+	if (n_QAM != 2)
+	{
+		CComplex_sym = (CComplex *)malloc(H->Variablenode_num * sizeof(CComplex));
+		BitToSym(H, CodeWord_sym, CodeWord_bit);
+		for (int i = 0; i < H->Variablenode_num; i++)
+		{
+			CodeWord_sym[i] = CodeWord_sym_test[i];
+		}
+		Modulate(H, CONSTELLATION, CComplex_sym, CodeWord_sym);
+	}
+	else
+	{
+		CComplex_sym = (CComplex *)malloc(H->bit_length * sizeof(CComplex));
+		for (int i = 0; i < H->Variablenode_num; i++)
+		{
+			for (int j = 0; j < H->q_bit; j++)
+			{
+				CodeWord_bit[i * H->q_bit + j] = (CodeWord_sym_test[i] & (1 << j)) >> j;
+			}
+		}
+		BitToSym(H, CodeWord_sym, CodeWord_bit);
+		Modulate(H, CONSTELLATION, CComplex_sym, CodeWord_bit);
+	}
 
 	for (SIM->SNR = startSNR; SIM->SNR <= stopSNR; SIM->SNR += stepSNR)
 	{

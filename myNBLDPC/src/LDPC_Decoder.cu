@@ -96,11 +96,10 @@ void Demodulate(LDPCCode *H, AWGNChannel *AWGN, CComplex *CONSTELLATION, VN *Var
 	{
 		// RX_MOD_SYM --> RX_LLR_BIT --> RX_LLR_SYM
 		// only support bpsk now
-		int p_i = 0;
 		for (int b = 0; b < H->bit_length; b++)
 		{
 
-			RX_LLR_BIT[b] = -2 * CComplex_sym_Channelout[b - p_i].Real / (AWGN->sigma * AWGN->sigma);
+			RX_LLR_BIT[b] = -2 * CComplex_sym_Channelout[b].Real / (AWGN->sigma * AWGN->sigma);
 		}
 		// RX_LLE_BIT --> RX_LLR_SYM
 		for (int s = 0; s < H->Variablenode_num; s++)
@@ -128,6 +127,7 @@ void Demodulate(LDPCCode *H, AWGNChannel *AWGN, CComplex *CONSTELLATION, VN *Var
 			}
 		}
 	}
+	free(RX_LLR_BIT);
 }
 int Decoding_EMS(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput)
 {
@@ -177,10 +177,9 @@ int Decoding_EMS(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int E
 				}
 			}
 			DecodeOutput[col] = DecideLLRVector(Variablenode[col].LLR, H->GF);
-			// printf("%d ",DecodeOutput[col]);
+			// printf("%d ", DecodeOutput[col]);
 		}
 		// printf("\n");
-		// exit(0);
 
 		decode_correct = true;
 		int sum_temp = 0;

@@ -16,7 +16,14 @@ void Simulation_GPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *C
 {
 
 	CComplex *CComplex_sym_Channelout;
-	CComplex_sym_Channelout = (CComplex *)malloc(H->Variablenode_num * sizeof(CComplex));
+	if (n_QAM != 2)
+	{
+		CComplex_sym_Channelout = (CComplex *)malloc(H->Variablenode_num * sizeof(CComplex));
+	}
+	else
+	{
+		CComplex_sym_Channelout = (CComplex *)malloc(H->bit_length * sizeof(CComplex));
+	}
 	while (SIM->num_Error_Frames < leastErrorFrames)
 	{
 		// printf("%d\n",SIM->num_Frames);
@@ -103,7 +110,7 @@ CComplex *Get_CONSTELLATION(LDPCCode *H)
 	}
 
 	int index;
-	for (int k = 0; k < H->GF; k++)
+	for (int k = 0; k < n_QAM; k++)
 	{
 		fscanf(fp_H, "%s", temp);
 		fscanf(fp_H, "%d", &index);

@@ -15,8 +15,8 @@
 #include "device_launch_parameters.h"
 
 #define Matrixfile "BDS.576.288.GF.64.txt"
-#define Constellationfile "./Constellation/GRAY_64QAM.txt"
-#define n_QAM 64
+#define Constellationfile "./Constellation/BPSK.txt"
+#define n_QAM 2
 /*LDPC码相关参数*/
 
 // #define	J		         			4									// 行分块个数
@@ -47,7 +47,7 @@
 
 /*仿真参数*/
 #define startSNR 0
-#define stepSNR 1
+#define stepSNR 0.5
 #define stopSNR 10
 
 #define leastErrorFrames 50 // 最少错误帧数

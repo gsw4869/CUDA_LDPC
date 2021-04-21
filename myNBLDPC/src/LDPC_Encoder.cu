@@ -17,10 +17,21 @@ void BitToSym(LDPCCode *H, int *CodeWord_sym, int *CodeWord_bit)
 
 void Modulate(LDPCCode *H, CComplex *CONSTELLATION, CComplex *CComplex_sym, int *CodeWord_sym)
 {
-	for (int s = 0; s < H->Variablenode_num; s++)
+	if (n_QAM != 2)
 	{
-		CComplex_sym[s].Real = CONSTELLATION[CodeWord_sym[s]].Real;
-		CComplex_sym[s].Image = CONSTELLATION[CodeWord_sym[s]].Image;
+		for (int s = 0; s < H->Variablenode_num; s++)
+		{
+			CComplex_sym[s].Real = CONSTELLATION[CodeWord_sym[s]].Real;
+			CComplex_sym[s].Image = CONSTELLATION[CodeWord_sym[s]].Image;
+		}
+	}
+	else
+	{
+		for (int s = 0; s < H->bit_length; s++)
+		{
+			CComplex_sym[s].Real = CONSTELLATION[CodeWord_sym[s]].Real;
+			CComplex_sym[s].Image = CONSTELLATION[CodeWord_sym[s]].Image;
+		}
 	}
 }
 /*
@@ -29,9 +40,17 @@ void Modulate(LDPCCode *H, CComplex *CONSTELLATION, CComplex *CComplex_sym, int 
 */
 void AWGNChannel_CPU(LDPCCode *H, AWGNChannel *AWGN, CComplex *CComplex_sym_Channelout, CComplex *CComplex_sym)
 {
-	int index0;
+	int index0, len;
 	float u1, u2, temp;
-	for (index0 = 0; index0 < H->Variablenode_num; index0++)
+	if (n_QAM != 2)
+	{
+		len = H->Variablenode_num;
+	}
+	else
+	{
+		len = H->bit_length;
+	}
+	for (index0 = 0; index0 < len; index0++)
 	{
 
 		u1 = RandomModule(AWGN->seed);
