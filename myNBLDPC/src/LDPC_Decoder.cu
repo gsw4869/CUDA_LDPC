@@ -91,12 +91,41 @@ int index_in_CN(VN *Variablenode, int VNnum, int index_in_linkCNS, CN *Checknode
 
 void Demodulate(LDPCCode *H, AWGNChannel *AWGN, CComplex *CONSTELLATION, VN *Variablenode, CComplex *CComplex_sym_Channelout)
 {
-	int p_i = 0;
-	for (int s = 0; s < H->Variablenode_num; s++)
+	float *RX_LLR_BIT = (float *)malloc(H->bit_length * sizeof(float));
+	if (n_QAM == 2)
 	{
-		for (int q = 1; q < H->GF; q++)
+		// RX_MOD_SYM --> RX_LLR_BIT --> RX_LLR_SYM
+		// only support bpsk now
+		int p_i = 0;
+		for (int b = 0; b < H->bit_length; b++)
 		{
-			Variablenode[s].L_ch[q - 1] = ((2 * CComplex_sym_Channelout[s - p_i].Real - CONSTELLATION[0].Real - CONSTELLATION[q].Real) * (CONSTELLATION[q].Real - CONSTELLATION[0].Real) + (2 * CComplex_sym_Channelout[s - p_i].Image - CONSTELLATION[0].Image - CONSTELLATION[q].Image) * (CONSTELLATION[q].Image - CONSTELLATION[0].Image)) / (2 * AWGN->sigma * AWGN->sigma);
+
+			RX_LLR_BIT[b] = -2 * CComplex_sym_Channelout[b - p_i].Real / (AWGN->sigma * AWGN->sigma);
+		}
+		// RX_LLE_BIT --> RX_LLR_SYM
+		for (int s = 0; s < H->Variablenode_num; s++)
+		{
+			for (int q = 1; q < H->GF; q++)
+			{
+				Variablenode[s].L_ch[q - 1] = 0;
+				for (int b_p_s = 0; b_p_s < H->q_bit; b_p_s++)
+				{
+					if ((q & (1 << b_p_s)) != 0)
+					{
+						Variablenode[s].L_ch[q - 1] += RX_LLR_BIT[s * H->q_bit + b_p_s];
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		for (int s = 0; s < H->Variablenode_num; s++)
+		{
+			for (int q = 1; q < H->GF; q++)
+			{
+				Variablenode[s].L_ch[q - 1] = ((2 * CComplex_sym_Channelout[s].Real - CONSTELLATION[0].Real - CONSTELLATION[q].Real) * (CONSTELLATION[q].Real - CONSTELLATION[0].Real) + (2 * CComplex_sym_Channelout[s].Image - CONSTELLATION[0].Image - CONSTELLATION[q].Image) * (CONSTELLATION[q].Image - CONSTELLATION[0].Image)) / (2 * AWGN->sigma * AWGN->sigma);
+			}
 		}
 	}
 }
@@ -154,9 +183,14 @@ int Decoding_EMS(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int E
 		// exit(0);
 
 		decode_correct = true;
-		for (int col = 0; col < H->Variablenode_num; col++)
+		int sum_temp = 0;
+		for (int row = 0; row < H->Checknode_num; row++)
 		{
-			if (DecodeOutput[col])
+			for (int i = 0; i < Checknode[row].weight; i++)
+			{
+				sum_temp = GFAdd(sum_temp, GFMultiply(DecodeOutput[Checknode[row].linkVNs[i]], Checknode[row].linkVNs_GF[i]));
+			}
+			if (sum_temp)
 			{
 				decode_correct = false;
 				break;

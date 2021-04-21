@@ -16,7 +16,7 @@
 
 #define Matrixfile "BDS.576.288.GF.64.txt"
 #define Constellationfile "./Constellation/GRAY_64QAM.txt"
-
+#define n_QAM 64
 /*LDPC码相关参数*/
 
 // #define	J		         			4									// 行分块个数
@@ -46,7 +46,7 @@
 #define snrtype 0   // 0--Eb/No; 1--Es/No
 
 /*仿真参数*/
-#define startSNR 4
+#define startSNR 0
 #define stepSNR 1
 #define stopSNR 10
 

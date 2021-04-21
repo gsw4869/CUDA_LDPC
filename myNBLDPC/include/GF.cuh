@@ -1,12 +1,3 @@
-/*
- * @Author: your name
- * @Date: 2021-04-09 16:52:08
- * @LastEditTime: 2021-04-11 10:35:37
- * @LastEditors: Please set LastEditors
- * @Description: In User Settings Edit
- * @FilePath: /myNBLDPC/include/GF.h
- */
-
 #ifndef _GF_CUH_
 #define _GF_CUH_
 
