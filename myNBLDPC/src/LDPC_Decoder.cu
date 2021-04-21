@@ -14,34 +14,34 @@
 #include "GF.cuh"
 #include "float.h"
 
-void BubleSort(float a[],int n,int index[])
+void BubleSort(float a[], int n, int index[])
 {
-    int i,j;
+	int i, j;
 	float x;
-    for(i=0;i<n;i++)   
-    {
-        for(j=1;j<n-i;j++) 
-        {
-            if(a[j-1]<a[j]) 
-            {
-                x=a[j];
-                a[j]=a[j-1];
-                a[j-1]=x;
-				x=index[j];
-				index[j]=index[j-1];
-				index[j-1]=x;
-            }
-        }
-    }
+	for (i = 0; i < n; i++)
+	{
+		for (j = 1; j < n - i; j++)
+		{
+			if (a[j - 1] < a[j])
+			{
+				x = a[j];
+				a[j] = a[j - 1];
+				a[j - 1] = x;
+				x = index[j];
+				index[j] = index[j - 1];
+				index[j - 1] = x;
+			}
+		}
+	}
 }
 
-int SortLLRVector(int GF,float* Entr_v2c,int* index)
+int SortLLRVector(int GF, float *Entr_v2c, int *index)
 {
-	BubleSort(Entr_v2c,GF,index);
+	BubleSort(Entr_v2c, GF, index);
 	return 1;
 }
 
-int DecideLLRVector(float* LLR,int GF)
+int DecideLLRVector(float *LLR, int GF)
 {
 	float max = 0;
 	int alpha_i;
@@ -63,187 +63,186 @@ int DecideLLRVector(float* LLR,int GF)
 	}
 }
 
-int index_in_VN(CN* Checknode,int CNnum,int index_in_linkVNS,VN* Variablenode)
+int index_in_VN(CN *Checknode, int CNnum, int index_in_linkVNS, VN *Variablenode)
 {
-    for(int i=0;i<Variablenode[Checknode[CNnum].linkVNs[index_in_linkVNS]].weight;i++)
-    {
-        if(Variablenode[Checknode[CNnum].linkVNs[index_in_linkVNS]].linkCNs[i]==CNnum)
-        {
-            return i;
-        }
-    }
-    printf("index_in_VN error\n");
-    exit(0);
-} 
-
-int index_in_CN(VN* Variablenode,int VNnum,int index_in_linkCNS,CN* Checknode)
-{
-    for(int i=0;i<Checknode[Variablenode[VNnum].linkCNs[index_in_linkCNS]].weight;i++)
-    {
-        if(Checknode[Variablenode[VNnum].linkCNs[index_in_linkCNS]].linkVNs[i]==VNnum)
-        {
-            return i;
-        }
-    }
-    printf("index_in_CN error\n");
-    exit(0);
-} 
-
-
-void Demodulate(LDPCCode* H,AWGNChannel* AWGN,CComplex* CONSTELLATION,VN* Variablenode,CComplex* CComplex_sym_Channelout)
-{
-    int p_i = 0;
-    for(int s = 0; s < H->Variablenode_num; s ++)
-    {
-            for(int q = 1; q < H->GF; q ++)
-            {
-                Variablenode[s].L_ch[q - 1] = ( (2 * CComplex_sym_Channelout[s - p_i].Real - CONSTELLATION[0].Real - CONSTELLATION[q].Real ) * (CONSTELLATION[q].Real - CONSTELLATION[0].Real) 
-                    + (2 * CComplex_sym_Channelout[s - p_i].Image - CONSTELLATION[0].Image - CONSTELLATION[q].Image ) * (CONSTELLATION[q].Image - CONSTELLATION[0].Image) ) / (2 * AWGN->sigma * AWGN->sigma);
-            }
-    }
-}
-int Decoding_EMS(LDPCCode* H,VN* Variablenode,CN* Checknode,int EMS_Nm,int EMS_Nc,int* DecodeOutput)
-{
-	for(int col = 0; col < H->Variablenode_num; col ++)
+	for (int i = 0; i < Variablenode[Checknode[CNnum].linkVNs[index_in_linkVNS]].weight; i++)
 	{
-		for(int d = 0; d < Variablenode[col].weight; d ++)
+		if (Variablenode[Checknode[CNnum].linkVNs[index_in_linkVNS]].linkCNs[i] == CNnum)
 		{
-			for(int q=0;q<H->GF;q++)
+			return i;
+		}
+	}
+	printf("index_in_VN error\n");
+	exit(0);
+}
+
+int index_in_CN(VN *Variablenode, int VNnum, int index_in_linkCNS, CN *Checknode)
+{
+	for (int i = 0; i < Checknode[Variablenode[VNnum].linkCNs[index_in_linkCNS]].weight; i++)
+	{
+		if (Checknode[Variablenode[VNnum].linkCNs[index_in_linkCNS]].linkVNs[i] == VNnum)
+		{
+			return i;
+		}
+	}
+	printf("index_in_CN error\n");
+	exit(0);
+}
+
+void Demodulate(LDPCCode *H, AWGNChannel *AWGN, CComplex *CONSTELLATION, VN *Variablenode, CComplex *CComplex_sym_Channelout)
+{
+	int p_i = 0;
+	for (int s = 0; s < H->Variablenode_num; s++)
+	{
+		for (int q = 1; q < H->GF; q++)
+		{
+			Variablenode[s].L_ch[q - 1] = ((2 * CComplex_sym_Channelout[s - p_i].Real - CONSTELLATION[0].Real - CONSTELLATION[q].Real) * (CONSTELLATION[q].Real - CONSTELLATION[0].Real) + (2 * CComplex_sym_Channelout[s - p_i].Image - CONSTELLATION[0].Image - CONSTELLATION[q].Image) * (CONSTELLATION[q].Image - CONSTELLATION[0].Image)) / (2 * AWGN->sigma * AWGN->sigma);
+		}
+	}
+}
+int Decoding_EMS(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput)
+{
+	for (int col = 0; col < H->Variablenode_num; col++)
+	{
+		for (int d = 0; d < Variablenode[col].weight; d++)
+		{
+			for (int q = 0; q < H->GF; q++)
 			{
-				Variablenode[col].Entr_v2c[d][q]=Variablenode[col].L_ch[q];
+				Variablenode[col].Entr_v2c[d][q] = Variablenode[col].L_ch[q];
 			}
 		}
 	}
-	for(int row = 0; row < H->Checknode_num; row ++)
+	for (int row = 0; row < H->Checknode_num; row++)
 	{
-		for(int d = 0; d < Checknode[row].weight; d ++)
+		for (int d = 0; d < Checknode[row].weight; d++)
 		{
-			for(int q=0;q<H->GF-1;q++)
+			for (int q = 0; q < H->GF - 1; q++)
 			{
-				Checknode[row].L_c2v[d][q]=0;
+				Checknode[row].L_c2v[d][q] = 0;
 			}
 		}
 	}
 
 	int iter_number = 0;
 	bool decode_correct = true;
-	while(iter_number ++ < maxIT)
+	while (iter_number++ < maxIT)
 	{
 		// printf("it_time: %d\n",iter_number);
-		for(int col=0;col<H->Variablenode_num;col++)
+		for (int col = 0; col < H->Variablenode_num; col++)
 		{
-			for(int d = 0; d < Variablenode[col].weight; d ++)
+			for (int d = 0; d < Variablenode[col].weight; d++)
 			{
-				for(int q=0;q<H->GF-1;q++)
+				for (int q = 0; q < H->GF - 1; q++)
 				{
 					Variablenode[col].LLR[q] = Variablenode[col].L_ch[q];
-				}				
+				}
 			}
 		}
-		for(int col=0;col<H->Variablenode_num;col++)
+		for (int col = 0; col < H->Variablenode_num; col++)
 		{
-			for(int d = 0; d < Variablenode[col].weight; d ++)
+			for (int d = 0; d < Variablenode[col].weight; d++)
 			{
-				for(int q=0;q<H->GF-1;q++)
+				for (int q = 0; q < H->GF - 1; q++)
 				{
-					Variablenode[col].LLR[q]+=Checknode[Variablenode[col].linkCNs[d]].L_c2v[index_in_CN(Variablenode,col,d,Checknode)][q];
-				}				
+					Variablenode[col].LLR[q] += Checknode[Variablenode[col].linkCNs[d]].L_c2v[index_in_CN(Variablenode, col, d, Checknode)][q];
+				}
 			}
-			DecodeOutput[col]=DecideLLRVector(Variablenode[col].LLR,H->GF);
+			DecodeOutput[col] = DecideLLRVector(Variablenode[col].LLR, H->GF);
 			// printf("%d ",DecodeOutput[col]);
 		}
 		// printf("\n");
 		// exit(0);
 
 		decode_correct = true;
-		for(int col=0;col<H->Variablenode_num;col++)
+		for (int col = 0; col < H->Variablenode_num; col++)
 		{
-			if(DecodeOutput[col])
+			if (DecodeOutput[col])
 			{
 				decode_correct = false;
 				break;
 			}
 		}
-		if(decode_correct)
+		if (decode_correct)
 		{
 			return 1;
 		}
 
 		// message from var to check
-		for(int col = 0; col < H->Variablenode_num; col ++)
+		for (int col = 0; col < H->Variablenode_num; col++)
 		{
-			for(int dv = 0; dv < Variablenode[col].weight; dv ++)
+			for (int dv = 0; dv < Variablenode[col].weight; dv++)
 			{
-				for(int q=0;q<H->GF-1;q++)
+				for (int q = 0; q < H->GF - 1; q++)
 				{
-					Variablenode[col].Entr_v2c[dv][q]=Variablenode[col].LLR[q]-Checknode[Variablenode[col].linkCNs[dv]].L_c2v[index_in_CN(Variablenode,col,dv,Checknode)][q];
+					Variablenode[col].Entr_v2c[dv][q] = Variablenode[col].LLR[q] - Checknode[Variablenode[col].linkCNs[dv]].L_c2v[index_in_CN(Variablenode, col, dv, Checknode)][q];
 				}
 			}
 		}
 
-		int *index=(int *)malloc((H->GF)*sizeof(int));
-		for(int col = 0; col < H->Variablenode_num; col ++)
+		int *index = (int *)malloc((H->GF) * sizeof(int));
+		for (int col = 0; col < H->Variablenode_num; col++)
 		{
-			memcpy(Variablenode[col].sort_L_v2c[0],Variablenode[col].Entr_v2c[0],Variablenode[col].weight*H->GF*sizeof(float));
-	
-			for(int dv = 0; dv < Variablenode[col].weight; dv ++)
+			memcpy(Variablenode[col].sort_L_v2c[0], Variablenode[col].Entr_v2c[0], Variablenode[col].weight * H->GF * sizeof(float));
+
+			for (int dv = 0; dv < Variablenode[col].weight; dv++)
 			{
-				for(int i=0;i<H->GF-1;i++)
+				for (int i = 0; i < H->GF - 1; i++)
 				{
-					index[i]=i+1;
+					index[i] = i + 1;
 				}
-				index[H->GF-1]=0;
-				SortLLRVector(H->GF,Variablenode[col].sort_L_v2c[dv],index);
-				for(int i=0;i<H->GF;i++)
+				index[H->GF - 1] = 0;
+				SortLLRVector(H->GF, Variablenode[col].sort_L_v2c[dv], index);
+				for (int i = 0; i < H->GF; i++)
 				{
-					Variablenode[col].sort_Entr_v2c[dv][i]=index[i];
+					Variablenode[col].sort_Entr_v2c[dv][i] = index[i];
 				}
 			}
 		}
-	
-		float* EMS_L_c2v=(float* )malloc(H->GF*sizeof(float));
+
+		float *EMS_L_c2v = (float *)malloc(H->GF * sizeof(float));
 
 		// message from check to var
-		for(int row = 0; row < H->Checknode_num; row ++)
+		for (int row = 0; row < H->Checknode_num; row++)
 		{
-			
-			for(int dc = 0; dc < Checknode[row].weight; dc ++)
+
+			for (int dc = 0; dc < Checknode[row].weight; dc++)
 			{
 				// reset the sum store vector to the munimum
-				for(int q = 0; q < H->GF; q ++)
+				for (int q = 0; q < H->GF; q++)
 				{
 					EMS_L_c2v[q] = -DBL_MAX;
 				}
-				
+
 				// recursly exhaustly
 				int sumNonele, diff;
 				float sumNonLLR;
 				// conf(q, 1)
-				sumNonele = 0; sumNonLLR = 0; diff = 0;
-				ConstructConf(Checknode,Variablenode,H->GF, 1, sumNonele, sumNonLLR, diff, 0, dc, Checknode[row].weight - 1, row,EMS_L_c2v);
-
+				sumNonele = 0;
+				sumNonLLR = 0;
+				diff = 0;
+				ConstructConf(Checknode, Variablenode, H->GF, 1, sumNonele, sumNonLLR, diff, 0, dc, Checknode[row].weight - 1, row, EMS_L_c2v);
 
 				// conf(nm, nc)
-				sumNonele = 0; sumNonLLR = 0; diff = 0;
-				ConstructConf(Checknode,Variablenode,EMS_Nm, EMS_Nc, sumNonele, sumNonLLR, diff, 0, dc, Checknode[row].weight - 1, row,EMS_L_c2v);
-			
+				sumNonele = 0;
+				sumNonLLR = 0;
+				diff = 0;
+				ConstructConf(Checknode, Variablenode, EMS_Nm, EMS_Nc, sumNonele, sumNonLLR, diff, 0, dc, Checknode[row].weight - 1, row, EMS_L_c2v);
+
 				// calculate each c2v LLR
 				int v = 0;
-				for(int k = 1; k < H->GF; k ++)
+				for (int k = 1; k < H->GF; k++)
 				{
 					v = GFMultiply(k, Checknode[row].linkVNs_GF[dc]);
-					Checknode[row].L_c2v[dc][k - 1] = (EMS_L_c2v[v] - EMS_L_c2v[0])/1.2;
+					Checknode[row].L_c2v[dc][k - 1] = (EMS_L_c2v[v] - EMS_L_c2v[0]) / 1.2;
 				}
 			}
 		}
 		free(EMS_L_c2v);
-
 	}
 	return 0;
-
 }
 
-int ConstructConf(CN *Checknode,VN *Variablenode,int Nm, int Nc, int& sumNonele, float& sumNonLLR, int& diff, int begin, int except, int end, int row,float* EMS_L_c2v)
+int ConstructConf(CN *Checknode, VN *Variablenode, int Nm, int Nc, int &sumNonele, float &sumNonLLR, int &diff, int begin, int except, int end, int row, float *EMS_L_c2v)
 {
 	int index;
 	if (begin > end)
@@ -260,7 +259,7 @@ int ConstructConf(CN *Checknode,VN *Variablenode,int Nm, int Nc, int& sumNonele,
 	}
 	else
 	{
-		index=index_in_VN(Checknode,row,begin,Variablenode);
+		index = index_in_VN(Checknode, row, begin, Variablenode);
 		for (int k = 0; k < Nm; k++)
 		{
 			sumNonele = GFAdd(GFMultiply(Variablenode[Checknode[row].linkVNs[begin]].sort_Entr_v2c[index][k], Checknode[row].linkVNs_GF[begin]), sumNonele);
