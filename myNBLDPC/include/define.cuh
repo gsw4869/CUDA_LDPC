@@ -17,6 +17,9 @@
 #define Matrixfile "BDS.576.288.GF.64.txt"
 #define Constellationfile "./Constellation/BPSK.txt"
 #define n_QAM 2
+#define GFQ 64
+#define maxdc 4
+#define maxdv 2
 
 /*LDPC译码器相关参数*/
 #define maxIT 50 // LDPC译码器最大迭代次数.其中对Q值赋初值用了一次迭代
