@@ -8,6 +8,7 @@
 #include "LDPC_Encoder.cuh"
 #include "GF.cuh"
 #include "math.h"
+#include "Decode_GPU.cuh"
 
 int main()
 {
@@ -99,6 +100,13 @@ int main()
 	cudaMalloc((void **)&TableInverse_GPU, H->GF * sizeof(unsigned));
 	cudaMemcpy(TableInverse_GPU, TableInverse, H->GF * sizeof(unsigned), cudaMemcpyHostToDevice); //GPU除法表
 
+	//GPU Array
+	int *Checknode_weight;
+	int *Variablenode_linkCNs;
+	int *Checknode_linkVNs;
+	int *Checknode_linkVNs_GF;
+	GPUArray_initial(H, Variablenode, Checknode, Checknode_weight, Variablenode_linkCNs, Checknode_linkVNs, Checknode_linkVNs_GF);
+
 	if (n_QAM != 2)
 	{
 		CComplex_sym = (CComplex *)malloc(H->Variablenode_num * sizeof(CComplex));
@@ -147,7 +155,8 @@ int main()
 
 		// BPSK(H,BPSK_Out,CodeWord);
 
-		Simulation_GPU(H, AWGN, SIM, CONSTELLATION, Variablenode, Checknode, CComplex_sym, CodeWord_sym, DecodeOutput);
+		// Simulation_CPU(H, AWGN, SIM, CONSTELLATION, Variablenode, Checknode, CComplex_sym, CodeWord_sym, DecodeOutput);
+		Simulation_GPU(H, AWGN, SIM, CONSTELLATION, Variablenode, Checknode, CComplex_sym, CodeWord_sym, DecodeOutput, TableMultiply_GPU, TableAdd_GPU, Checknode_weight, Variablenode_linkCNs, Checknode_linkVNs, Checknode_linkVNs_GF);
 
 		// for(int i=0;i<H->Variablenode_num;i++)
 		// {

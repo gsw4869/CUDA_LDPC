@@ -6,13 +6,14 @@
 #include <assert.h>
 #include <fstream>
 #include <string>
+#include "Decode_GPU.cuh"
 
 /*
 * 仿真函数
 * AWGN:AWGNChannel类变量，包含噪声种子等
 * 
 */
-void Simulation_GPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *CONSTELLATION, VN *Variablenode, CN *Checknode, CComplex *CComplex_sym, int *CodeWord_sym, int *DecodeOutput)
+void Simulation_CPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *CONSTELLATION, VN *Variablenode, CN *Checknode, CComplex *CComplex_sym, int *CodeWord_sym, int *DecodeOutput)
 {
 
 	CComplex *CComplex_sym_Channelout;
@@ -34,6 +35,38 @@ void Simulation_GPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *C
 		Demodulate(H, AWGN, CONSTELLATION, Variablenode, CComplex_sym_Channelout);
 
 		Decoding_EMS(H, Variablenode, Checknode, H->GF / 2, 2, DecodeOutput);
+
+		Statistic(SIM, CodeWord_sym, DecodeOutput, H);
+	}
+}
+
+/*
+* 仿真函数
+* AWGN:AWGNChannel类变量，包含噪声种子等
+* 
+*/
+void Simulation_GPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *CONSTELLATION, VN *Variablenode, CN *Checknode, CComplex *CComplex_sym, int *CodeWord_sym, int *DecodeOutput, unsigned *TableMultiply_GPU, unsigned *TableAdd_GPU, int *Checknode_weight, int *Variablenode_linkCNs, int *Checknode_linkVNs, int *Checknode_linkVNs_GF)
+{
+
+	CComplex *CComplex_sym_Channelout;
+	if (n_QAM != 2)
+	{
+		CComplex_sym_Channelout = (CComplex *)malloc(H->Variablenode_num * sizeof(CComplex));
+	}
+	else
+	{
+		CComplex_sym_Channelout = (CComplex *)malloc(H->bit_length * sizeof(CComplex));
+	}
+	while (SIM->num_Error_Frames < leastErrorFrames)
+	{
+		// printf("%d\n",SIM->num_Frames);
+		SIM->num_Frames += 1;
+
+		AWGNChannel_CPU(H, AWGN, CComplex_sym_Channelout, CComplex_sym);
+
+		Demodulate(H, AWGN, CONSTELLATION, Variablenode, CComplex_sym_Channelout);
+
+		Decoding_EMS_GPU(H, Variablenode, Checknode, H->GF / 2, 2, DecodeOutput, TableMultiply_GPU, TableAdd_GPU, Checknode_weight, Variablenode_linkCNs, Checknode_linkVNs, Checknode_linkVNs_GF);
 
 		Statistic(SIM, CodeWord_sym, DecodeOutput, H);
 	}
