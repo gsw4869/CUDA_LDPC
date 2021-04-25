@@ -89,7 +89,7 @@ int Statistic(Simulation *SIM, int *CodeWord_Frames, int *D, LDPCCode *H)
 	// SIM->num_Error_Frames = (Error_msgBit!= 0 || D[index0 + CW_Len * Num_Frames_OneTime] == 0) ? SIM->num_Error_Frames + 1 : SIM->num_Error_Frames;
 	// SIM->num_Alarm_Frames = (Error_msgBit[index0] == 0 && D[index0 + CW_Len * Num_Frames_OneTime] == 0) ? SIM->num_Alarm_Frames + 1 : SIM->num_Alarm_Frames;
 	// SIM->num_False_Frames = (Error_msgBit[index0] != 0 && D[index0 + CW_Len * Num_Frames_OneTime] == 1) ? SIM->num_False_Frames + 1 : SIM->num_False_Frames;
-	SIM->Total_Iteration += H->iteraTime;
+	SIM->Total_Iteration += 0;
 
 	if (SIM->num_Frames % displayStep == 0)
 	{
