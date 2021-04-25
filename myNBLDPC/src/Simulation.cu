@@ -34,7 +34,7 @@ void Simulation_CPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *C
 
 		Demodulate(H, AWGN, CONSTELLATION, Variablenode, CComplex_sym_Channelout);
 
-		Decoding_EMS(H, Variablenode, Checknode, H->GF / 2, 2, DecodeOutput);
+		Decoding_EMS(H, Variablenode, Checknode, H->GF, 1, DecodeOutput);
 
 		Statistic(SIM, CodeWord_sym, DecodeOutput, H);
 	}

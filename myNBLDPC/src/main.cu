@@ -101,11 +101,84 @@ int main()
 	cudaMemcpy(TableInverse_GPU, TableInverse, H->GF * sizeof(unsigned), cudaMemcpyHostToDevice); //GPU除法表
 
 	//GPU Array
+	// int *Checknode_weight;
+	// int *Variablenode_linkCNs;
+	// int *Checknode_linkVNs;
+	// int *Checknode_linkVNs_GF;
+	// GPUArray_initial(H, Variablenode, Checknode, Checknode_weight, Variablenode_linkCNs, Checknode_linkVNs, Checknode_linkVNs_GF);
+
 	int *Checknode_weight;
+	cudaMalloc((void **)&Checknode_weight, H->Checknode_num * sizeof(int));
+
+	int *Checknode_weight_temp = (int *)malloc(H->Checknode_num * sizeof(int));
+	for (int i = 0; i < H->Checknode_num; i++)
+	{
+		Checknode_weight_temp[i] = Checknode[i].weight;
+	}
+	cudaStatus = cudaMemcpy(Checknode_weight, Checknode_weight_temp, H->Checknode_num * sizeof(int), cudaMemcpyHostToDevice);
+	if (cudaStatus != cudaSuccess)
+	{
+		printf("Cannot copy Checknode_weight\n");
+		exit(0);
+	}
+	free(Checknode_weight_temp);
+
 	int *Variablenode_linkCNs;
+	cudaMalloc((void **)&Variablenode_linkCNs, H->Variablenode_num * maxdv * sizeof(int));
+
+	int *Variablenode_linkCNs_temp = (int *)malloc(H->Variablenode_num * maxdv * sizeof(int));
+	for (int i = 0; i < H->Variablenode_num; i++)
+	{
+		for (int j = 0; j < Variablenode[i].weight; j++)
+		{
+			Variablenode_linkCNs_temp[i * maxdv + j] = Variablenode[i].linkCNs[j];
+		}
+	}
+	cudaStatus = cudaMemcpy(Variablenode_linkCNs, Variablenode_linkCNs_temp, H->Variablenode_num * maxdv * sizeof(int), cudaMemcpyHostToDevice);
+	if (cudaStatus != cudaSuccess)
+	{
+		printf("Cannot copy Variablenode_linkCNs\n");
+		exit(0);
+	}
+	free(Variablenode_linkCNs_temp);
+
 	int *Checknode_linkVNs;
+	cudaMalloc((void **)&Checknode_linkVNs, H->Checknode_num * maxdc * sizeof(int));
+
+	int *Checknode_linkVNs_temp = (int *)malloc(H->Checknode_num * maxdc * sizeof(int));
+	for (int i = 0; i < H->Checknode_num; i++)
+	{
+		for (int j = 0; j < Checknode[i].weight; j++)
+		{
+			Checknode_linkVNs_temp[i * maxdc + j] = Checknode[i].linkVNs[j];
+		}
+	}
+	cudaStatus = cudaMemcpy(Checknode_linkVNs, Checknode_linkVNs_temp, H->Checknode_num * maxdc * sizeof(int), cudaMemcpyHostToDevice);
+	if (cudaStatus != cudaSuccess)
+	{
+		printf("Cannot copy Checknode_linkVNs\n");
+		exit(0);
+	}
+	free(Checknode_linkVNs_temp);
+
 	int *Checknode_linkVNs_GF;
-	GPUArray_initial(H, Variablenode, Checknode, Checknode_weight, Variablenode_linkCNs, Checknode_linkVNs, Checknode_linkVNs_GF);
+	cudaMalloc((void **)&Checknode_linkVNs_GF, H->Checknode_num * maxdc * sizeof(int));
+
+	int *Checknode_linkVNs_GF_temp = (int *)malloc(H->Checknode_num * maxdc * sizeof(int));
+	for (int i = 0; i < H->Checknode_num; i++)
+	{
+		for (int j = 0; j < Checknode[i].weight; j++)
+		{
+			Checknode_linkVNs_GF_temp[i * maxdc + j] = Checknode[i].linkVNs_GF[j];
+		}
+	}
+	cudaStatus = cudaMemcpy(Checknode_linkVNs_GF, Checknode_linkVNs_GF_temp, H->Checknode_num * maxdc * sizeof(int), cudaMemcpyHostToDevice);
+	if (cudaStatus != cudaSuccess)
+	{
+		printf("Cannot copy Checknode_linkVNs_GF\n");
+		exit(0);
+	}
+	free(Checknode_linkVNs_GF_temp);
 
 	if (n_QAM != 2)
 	{
@@ -165,7 +238,13 @@ int main()
 		// printf("\n");
 		// exit(0);
 	}
-
+	cudaFree(TableMultiply_GPU);
+	cudaFree(TableAdd_GPU);
+	cudaFree(TableInverse_GPU);
+	cudaFree(Checknode_weight);
+	cudaFree(Variablenode_linkCNs);
+	cudaFree(Checknode_linkVNs);
+	cudaFree(Checknode_linkVNs_GF);
 	free(AWGN);
 	free(SIM);
 	free(H);

@@ -41,7 +41,7 @@
 
 #define leastErrorFrames 50 // 最少错误帧数
 #define leastTestFrames 10  // 最少仿真帧数
-#define displayStep 1       // 定义将译码结果写入相应txt文件的频率
+#define displayStep 1000    // 定义将译码结果写入相应txt文件的频率
 
 /*CUDA c相应参数*/
 #define MaxThreadPerBlock 1024 // 针对GeForce GTX 1050而言.
