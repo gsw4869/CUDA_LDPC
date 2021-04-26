@@ -15,7 +15,7 @@
 */
 void Simulation_CPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *CONSTELLATION, VN *Variablenode, CN *Checknode, CComplex *CComplex_sym, int *CodeWord_sym, int *DecodeOutput)
 {
-
+	int iter_number = 0;
 	CComplex *CComplex_sym_Channelout;
 	if (n_QAM != 2)
 	{
@@ -34,7 +34,9 @@ void Simulation_CPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *C
 
 		Demodulate(H, AWGN, CONSTELLATION, Variablenode, CComplex_sym_Channelout);
 
-		Decoding_EMS(H, Variablenode, Checknode, H->GF, 1, DecodeOutput);
+		Decoding_EMS(H, Variablenode, Checknode, H->GF, 1, DecodeOutput, iter_number);
+
+		SIM->Total_Iteration += iter_number;
 
 		Statistic(SIM, CodeWord_sym, DecodeOutput, H);
 	}
@@ -48,7 +50,7 @@ void Simulation_CPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *C
 */
 void Simulation_GPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *CONSTELLATION, VN *Variablenode, CN *Checknode, CComplex *CComplex_sym, int *CodeWord_sym, int *DecodeOutput, unsigned *TableMultiply_GPU, unsigned *TableAdd_GPU, int *Checknode_weight, int *Variablenode_linkCNs, int *Checknode_linkVNs, int *Checknode_linkVNs_GF)
 {
-
+	int iter_number = 0;
 	CComplex *CComplex_sym_Channelout;
 	if (n_QAM != 2)
 	{
@@ -67,7 +69,9 @@ void Simulation_GPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *C
 
 		Demodulate(H, AWGN, CONSTELLATION, Variablenode, CComplex_sym_Channelout);
 
-		Decoding_EMS_GPU(H, Variablenode, Checknode, H->GF / 2, 2, DecodeOutput, TableMultiply_GPU, TableAdd_GPU, Checknode_weight, Variablenode_linkCNs, Checknode_linkVNs, Checknode_linkVNs_GF);
+		Decoding_EMS_GPU(H, Variablenode, Checknode, H->GF / 2, 2, DecodeOutput, TableMultiply_GPU, TableAdd_GPU, Checknode_weight, Variablenode_linkCNs, Checknode_linkVNs, Checknode_linkVNs_GF, iter_number);
+
+		SIM->Total_Iteration += iter_number;
 
 		Statistic(SIM, CodeWord_sym, DecodeOutput, H);
 	}
@@ -91,7 +95,6 @@ int Statistic(Simulation *SIM, int *CodeWord_Frames, int *D, LDPCCode *H)
 	// SIM->num_Error_Frames = (Error_msgBit!= 0 || D[index0 + CW_Len * Num_Frames_OneTime] == 0) ? SIM->num_Error_Frames + 1 : SIM->num_Error_Frames;
 	// SIM->num_Alarm_Frames = (Error_msgBit[index0] == 0 && D[index0 + CW_Len * Num_Frames_OneTime] == 0) ? SIM->num_Alarm_Frames + 1 : SIM->num_Alarm_Frames;
 	// SIM->num_False_Frames = (Error_msgBit[index0] != 0 && D[index0 + CW_Len * Num_Frames_OneTime] == 1) ? SIM->num_False_Frames + 1 : SIM->num_False_Frames;
-	SIM->Total_Iteration += 0;
 
 	if (SIM->num_Frames % displayStep == 0)
 	{

@@ -10,7 +10,7 @@ int ConstructConf(CN *Checknode, VN *Variablenode, int Nm, int Nc, int &sumNonel
 
 void LDPC_Decoder_GPU(int *D, float *Channel_Out, cudaDeviceProp prop, int *Address_Variablenode, int *Weight_Checknode, int *Weight_Variablenode, LDPCCode *LDPC);
 
-int Decoding_EMS(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput);
+int Decoding_EMS(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, int &iter_number);
 
 int index_in_VN(CN *Checknode, int CNnum, int index_in_linkVNS, VN *Variablenode);
 

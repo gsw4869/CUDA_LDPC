@@ -35,13 +35,13 @@
 #define snrtype 0   // 0--Eb/No; 1--Es/No
 
 /*仿真参数*/
-#define startSNR 0
-#define stepSNR 0.5
-#define stopSNR 10
+#define startSNR 5
+#define stepSNR 1
+#define stopSNR 11
 
 #define leastErrorFrames 50 // 最少错误帧数
 #define leastTestFrames 10  // 最少仿真帧数
-#define displayStep 1000    // 定义将译码结果写入相应txt文件的频率
+#define displayStep 10000   // 定义将译码结果写入相应txt文件的频率
 
 /*CUDA c相应参数*/
 #define MaxThreadPerBlock 1024 // 针对GeForce GTX 1050而言.

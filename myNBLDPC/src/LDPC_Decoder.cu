@@ -129,7 +129,7 @@ void Demodulate(LDPCCode *H, AWGNChannel *AWGN, CComplex *CONSTELLATION, VN *Var
 	}
 	free(RX_LLR_BIT);
 }
-int Decoding_EMS(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput)
+int Decoding_EMS(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, int &iter_number)
 {
 	for (int col = 0; col < H->Variablenode_num; col++)
 	{
@@ -154,7 +154,7 @@ int Decoding_EMS(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int E
 	float *EMS_L_c2v = (float *)malloc(H->GF * sizeof(float));
 	int *index = (int *)malloc((H->GF) * sizeof(int));
 
-	int iter_number = 0;
+	iter_number = 0;
 	bool decode_correct = true;
 	while (iter_number++ < maxIT)
 	{

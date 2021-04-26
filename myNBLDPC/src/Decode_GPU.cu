@@ -45,7 +45,7 @@ __device__ int index_in_VN_GPU(int *Checknode_linkVNs, int Checknode_num, int in
     printf("index_in_VN_GPU error\n");
 }
 
-int Decoding_EMS_GPU(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, unsigned *TableMultiply_GPU, unsigned *TableAdd_GPU, int *Checknode_weight, int *Variablenode_linkCNs, int *Checknode_linkVNs, int *Checknode_linkVNs_GF)
+int Decoding_EMS_GPU(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, unsigned *TableMultiply_GPU, unsigned *TableAdd_GPU, int *Checknode_weight, int *Variablenode_linkCNs, int *Checknode_linkVNs, int *Checknode_linkVNs_GF, int &iter_number)
 {
 
     for (int col = 0; col < H->Variablenode_num; col++)
@@ -85,7 +85,7 @@ int Decoding_EMS_GPU(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, i
 
     int *index = (int *)malloc((H->GF) * sizeof(int));
 
-    int iter_number = 0;
+    iter_number = 0;
     bool decode_correct = true;
     while (iter_number++ < maxIT)
     {
@@ -331,7 +331,7 @@ __device__ int ConstructConf_GPU(unsigned *TableMultiply_GPU, unsigned *TableAdd
     //     }
     // }
     // return 0;
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < end + 1; i++)
     {
         if (i == except)
         {
@@ -345,7 +345,7 @@ __device__ int ConstructConf_GPU(unsigned *TableMultiply_GPU, unsigned *TableAdd
     {
         EMS_L_c2v[sumNonele] = sumNonLLR;
     }
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < end + 1; i++)
     {
         if (i == except)
         {
@@ -360,7 +360,7 @@ __device__ int ConstructConf_GPU(unsigned *TableMultiply_GPU, unsigned *TableAdd
             sumNonele = GFAdd_GPU(GFMultiply_GPU(sort_Entr_v2c[Checknode_linkVNs[row * maxdc + i] * maxdv * GFQ + index * GFQ + k], Checknode_linkVNs_GF[row * maxdc + i], TableMultiply_GPU), sumNonele, TableAdd_GPU);
             sumNonLLR = sumNonLLR + sort_L_v2c[Checknode_linkVNs[row * maxdc + i] * maxdv * GFQ + index * GFQ + k];
 
-            for (int j = 0; j < 4; j++)
+            for (int j = 0; j < end + 1; j++)
             {
                 if (j == i | j == except)
                 {
