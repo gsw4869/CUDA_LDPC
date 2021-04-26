@@ -15,6 +15,5 @@ __device__ int ConstructConf_GPU(unsigned *TableMultiply_GPU, unsigned *TableAdd
 __global__ void Checknode_EMS(unsigned *TableMultiply_GPU, unsigned *TableAdd_GPU, int EMS_Nm, int EMS_Nc, int *Checknode_weight, int *Variblenode_linkCNs, int *Checknode_linkVNs, int *Checknode_linkVNs_GF, int *sort_Entr_v2c, float *sort_L_v2c, float *Checknode_L_c2v, int Checknode_num);
 
 int Decoding_EMS_GPU(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, unsigned *TableMultiply_GPU, unsigned *TableAdd_GPU, int *Checknode_weight, int *Variablenode_linkCNs, int *Checknode_linkVNs, int *Checknode_linkVNs_GF);
-void GPUArray_initial(LDPCCode *H, VN *Variablenode, CN *Checknode, int *Checknode_weight, int *Variablenode_linkCNs, int *Checknode_linkVNs, int *Checknode_linkVNs_GF);
 
 #endif

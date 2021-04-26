@@ -38,6 +38,7 @@ void Simulation_CPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *C
 
 		Statistic(SIM, CodeWord_sym, DecodeOutput, H);
 	}
+	free(CComplex_sym_Channelout);
 }
 
 /*
@@ -70,6 +71,7 @@ void Simulation_GPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *C
 
 		Statistic(SIM, CodeWord_sym, DecodeOutput, H);
 	}
+	free(CComplex_sym_Channelout);
 }
 
 /*

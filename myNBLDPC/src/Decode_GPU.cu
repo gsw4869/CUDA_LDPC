@@ -83,6 +83,8 @@ int Decoding_EMS_GPU(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, i
     float *Checknode_L_c2v;
     cudaMalloc((void **)&Checknode_L_c2v, H->Checknode_num * maxdc * GFQ * sizeof(float));
 
+    int *index = (int *)malloc((H->GF) * sizeof(int));
+
     int iter_number = 0;
     bool decode_correct = true;
     while (iter_number++ < maxIT)
@@ -128,6 +130,13 @@ int Decoding_EMS_GPU(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, i
         }
         if (decode_correct)
         {
+            cudaFree(sort_Entr_v2c);
+            cudaFree(sort_L_v2c);
+            cudaFree(Checknode_L_c2v);
+            free(index);
+            free(sort_Entr_v2c_temp);
+            free(sort_L_v2c_temp);
+            free(Checknode_L_c2v_temp);
             return 1;
         }
 
@@ -143,7 +152,6 @@ int Decoding_EMS_GPU(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, i
             }
         }
 
-        int *index = (int *)malloc((H->GF) * sizeof(int));
         for (int col = 0; col < H->Variablenode_num; col++)
         {
             memcpy(Variablenode[col].sort_L_v2c[0], Variablenode[col].Entr_v2c[0], Variablenode[col].weight * H->GF * sizeof(float));
@@ -204,6 +212,7 @@ int Decoding_EMS_GPU(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, i
     cudaFree(sort_Entr_v2c);
     cudaFree(sort_L_v2c);
     cudaFree(Checknode_L_c2v);
+    free(index);
     free(sort_Entr_v2c_temp);
     free(sort_L_v2c_temp);
     free(Checknode_L_c2v_temp);
@@ -367,82 +376,4 @@ __device__ int ConstructConf_GPU(unsigned *TableMultiply_GPU, unsigned *TableAdd
             }
         }
     }
-}
-
-void GPUArray_initial(LDPCCode *H, VN *Variablenode, CN *Checknode, int *Checknode_weight, int *Variablenode_linkCNs, int *Checknode_linkVNs, int *Checknode_linkVNs_GF)
-{
-    // int *Checknode_weight;
-    cudaError_t cudaStatus;
-
-    cudaMalloc((void **)&Checknode_weight, H->Checknode_num * sizeof(int));
-
-    int *Checknode_weight_temp = (int *)malloc(H->Checknode_num * sizeof(int));
-    for (int i = 0; i < H->Checknode_num; i++)
-    {
-        Checknode_weight_temp[i] = Checknode[i].weight;
-    }
-    cudaStatus = cudaMemcpy(Checknode_weight, Checknode_weight_temp, H->Checknode_num * sizeof(int), cudaMemcpyHostToDevice);
-    if (cudaStatus != cudaSuccess)
-    {
-        printf("Cannot copy Checknode_weight\n");
-        exit(0);
-    }
-    free(Checknode_weight_temp);
-
-    // int *Variablenode_linkCNs;
-    cudaMalloc((void **)&Variablenode_linkCNs, H->Variablenode_num * maxdv * sizeof(int));
-
-    int *Variablenode_linkCNs_temp = (int *)malloc(H->Variablenode_num * maxdv * sizeof(int));
-    for (int i = 0; i < H->Variablenode_num; i++)
-    {
-        for (int j = 0; j < Variablenode[i].weight; j++)
-        {
-            Variablenode_linkCNs_temp[i * maxdv + j] = Variablenode[i].linkCNs[j];
-        }
-    }
-    cudaStatus = cudaMemcpy(Variablenode_linkCNs, Variablenode_linkCNs_temp, H->Variablenode_num * maxdv * sizeof(int), cudaMemcpyHostToDevice);
-    if (cudaStatus != cudaSuccess)
-    {
-        printf("Cannot copy Variablenode_linkCNs\n");
-        exit(0);
-    }
-    free(Variablenode_linkCNs_temp);
-
-    // int *Checknode_linkVNs;
-    cudaMalloc((void **)&Checknode_linkVNs, H->Checknode_num * maxdc * sizeof(int));
-
-    int *Checknode_linkVNs_temp = (int *)malloc(H->Checknode_num * maxdc * sizeof(int));
-    for (int i = 0; i < H->Checknode_num; i++)
-    {
-        for (int j = 0; j < Checknode[i].weight; j++)
-        {
-            Checknode_linkVNs_temp[i * maxdc + j] = Checknode[i].linkVNs[j];
-        }
-    }
-    cudaStatus = cudaMemcpy(Checknode_linkVNs, Checknode_linkVNs_temp, H->Checknode_num * maxdc * sizeof(int), cudaMemcpyHostToDevice);
-    if (cudaStatus != cudaSuccess)
-    {
-        printf("Cannot copy Checknode_linkVNs\n");
-        exit(0);
-    }
-    free(Checknode_linkVNs_temp);
-
-    // int *Checknode_linkVNs_GF;
-    cudaMalloc((void **)&Checknode_linkVNs_GF, H->Checknode_num * maxdc * sizeof(int));
-
-    int *Checknode_linkVNs_GF_temp = (int *)malloc(H->Checknode_num * maxdc * sizeof(int));
-    for (int i = 0; i < H->Checknode_num; i++)
-    {
-        for (int j = 0; j < Checknode[i].weight; j++)
-        {
-            Checknode_linkVNs_GF_temp[i * maxdc + j] = Checknode[i].linkVNs_GF[j];
-        }
-    }
-    cudaStatus = cudaMemcpy(Checknode_linkVNs_GF, Checknode_linkVNs_GF_temp, H->Checknode_num * maxdc * sizeof(int), cudaMemcpyHostToDevice);
-    if (cudaStatus != cudaSuccess)
-    {
-        printf("Cannot copy Checknode_linkVNs_GF\n");
-        exit(0);
-    }
-    free(Checknode_linkVNs_GF_temp);
 }

@@ -151,6 +151,8 @@ int Decoding_EMS(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int E
 			}
 		}
 	}
+	float *EMS_L_c2v = (float *)malloc(H->GF * sizeof(float));
+	int *index = (int *)malloc((H->GF) * sizeof(int));
 
 	int iter_number = 0;
 	bool decode_correct = true;
@@ -197,6 +199,8 @@ int Decoding_EMS(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int E
 		}
 		if (decode_correct)
 		{
+			free(EMS_L_c2v);
+			free(index);
 			return 1;
 		}
 
@@ -212,7 +216,6 @@ int Decoding_EMS(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int E
 			}
 		}
 
-		int *index = (int *)malloc((H->GF) * sizeof(int));
 		for (int col = 0; col < H->Variablenode_num; col++)
 		{
 			memcpy(Variablenode[col].sort_L_v2c[0], Variablenode[col].Entr_v2c[0], Variablenode[col].weight * H->GF * sizeof(float));
@@ -231,8 +234,6 @@ int Decoding_EMS(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int E
 				}
 			}
 		}
-
-		float *EMS_L_c2v = (float *)malloc(H->GF * sizeof(float));
 
 		// message from check to var
 		for (int row = 0; row < H->Checknode_num; row++)
@@ -270,8 +271,9 @@ int Decoding_EMS(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int E
 				}
 			}
 		}
-		free(EMS_L_c2v);
 	}
+	free(EMS_L_c2v);
+	free(index);
 	return 0;
 }
 
