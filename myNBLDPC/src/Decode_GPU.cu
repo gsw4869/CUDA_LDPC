@@ -87,7 +87,7 @@ int Decoding_EMS_GPU(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, i
 
     iter_number = 0;
     bool decode_correct = true;
-    while (iter_number++ < maxIT)
+    while (iter_number++ < maxIT - 1)
     {
         // printf("it_time: %d\n",iter_number);
         for (int col = 0; col < H->Variablenode_num; col++)

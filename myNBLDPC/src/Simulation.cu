@@ -7,6 +7,8 @@
 #include <fstream>
 #include <string>
 #include "Decode_GPU.cuh"
+#include <ctime>
+#include <thread>
 
 /*
 * 仿真函数
@@ -16,6 +18,7 @@
 void Simulation_CPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *CONSTELLATION, VN *Variablenode, CN *Checknode, CComplex *CComplex_sym, int *CodeWord_sym, int *DecodeOutput)
 {
 	int iter_number = 0;
+
 	CComplex *CComplex_sym_Channelout;
 	if (n_QAM != 2)
 	{
@@ -25,6 +28,8 @@ void Simulation_CPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *C
 	{
 		CComplex_sym_Channelout = (CComplex *)malloc(H->bit_length * sizeof(CComplex));
 	}
+	std::chrono::_V2::steady_clock::time_point start = std::chrono::steady_clock::now();
+	std::chrono::_V2::steady_clock::time_point end;
 	while (SIM->num_Error_Frames < leastErrorFrames)
 	{
 		// printf("%d\n",SIM->num_Frames);
@@ -35,6 +40,10 @@ void Simulation_CPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *C
 		Demodulate(H, AWGN, CONSTELLATION, Variablenode, CComplex_sym_Channelout);
 
 		Decoding_EMS(H, Variablenode, Checknode, H->GF, 1, DecodeOutput, iter_number);
+
+		end = std::chrono::steady_clock::now();
+
+		SIM->sumTime = (end - start).count() / 1000000000.0;
 
 		SIM->Total_Iteration += iter_number;
 
@@ -60,6 +69,8 @@ void Simulation_GPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *C
 	{
 		CComplex_sym_Channelout = (CComplex *)malloc(H->bit_length * sizeof(CComplex));
 	}
+	std::chrono::_V2::steady_clock::time_point start = std::chrono::steady_clock::now();
+	std::chrono::_V2::steady_clock::time_point end;
 	while (SIM->num_Error_Frames < leastErrorFrames)
 	{
 		// printf("%d\n",SIM->num_Frames);
@@ -70,6 +81,10 @@ void Simulation_GPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *C
 		Demodulate(H, AWGN, CONSTELLATION, Variablenode, CComplex_sym_Channelout);
 
 		Decoding_EMS_GPU(H, Variablenode, Checknode, H->GF / 2, 2, DecodeOutput, TableMultiply_GPU, TableAdd_GPU, Checknode_weight, Variablenode_linkCNs, Checknode_linkVNs, Checknode_linkVNs_GF, iter_number);
+
+		end = std::chrono::steady_clock::now();
+
+		SIM->sumTime = (end - start).count() / 1000000000.0;
 
 		SIM->Total_Iteration += iter_number;
 
@@ -103,14 +118,14 @@ int Statistic(Simulation *SIM, int *CodeWord_Frames, int *D, LDPCCode *H)
 		SIM->AverageIT = (double)SIM->Total_Iteration / (double)SIM->num_Frames;
 		// SIM->FER_Alarm = (double)SIM->num_Alarm_Frames / (double)SIM->num_Frames;
 		// SIM->FER_False = (double)SIM->num_False_Frames / (double)SIM->num_Frames;
-		printf(" %.1f %8d  %4d  %6.4e  %6.4e  %.2f  %6.4e %6.4e\n", SIM->SNR, SIM->num_Frames, SIM->num_Error_Frames, SIM->FER, SIM->BER, SIM->AverageIT, SIM->FER_False, SIM->FER_Alarm);
+		printf(" %.1f %8d  %4d  %6.4e  %6.4e  %.2f  %6.4esec\n", SIM->SNR, SIM->num_Frames, SIM->num_Error_Frames, SIM->FER, SIM->BER, SIM->AverageIT, SIM->sumTime / SIM->num_Frames);
 		FILE *fp_H;
 		if (NULL == (fp_H = fopen("results.txt", "a")))
 		{
 			printf("can not open file: results.txt\n");
 			exit(0);
 		}
-		fprintf(fp_H, " %.1f %8d  %4d  %6.4e  %6.4e  %.2f  %6.4e %6.4e\n", SIM->SNR, SIM->num_Frames, SIM->num_Error_Frames, SIM->FER, SIM->BER, SIM->AverageIT, SIM->FER_False, SIM->FER_Alarm);
+		fprintf(fp_H, " %.1f %8d  %4d  %6.4e  %6.4e  %.2f  %6.4esec\n", SIM->SNR, SIM->num_Frames, SIM->num_Error_Frames, SIM->FER, SIM->BER, SIM->AverageIT, SIM->sumTime / SIM->num_Frames);
 		fclose(fp_H);
 	}
 
@@ -121,14 +136,14 @@ int Statistic(Simulation *SIM, int *CodeWord_Frames, int *D, LDPCCode *H)
 		SIM->AverageIT = (double)SIM->Total_Iteration / (double)SIM->num_Frames;
 		// SIM->FER_Alarm = (double)SIM->num_Alarm_Frames / (double)SIM->num_Frames;
 		// SIM->FER_False = (double)SIM->num_False_Frames / (double)SIM->num_Frames;
-		printf(" %.1f %8d  %4d  %6.4e  %6.4e  %.2f  %6.4e %6.4e\n", SIM->SNR, SIM->num_Frames, SIM->num_Error_Frames, SIM->FER, SIM->BER, SIM->AverageIT, SIM->FER_False, SIM->FER_Alarm);
+		printf(" %.1f %8d  %4d  %6.4e  %6.4e  %.2f  %6.4esec\n", SIM->SNR, SIM->num_Frames, SIM->num_Error_Frames, SIM->FER, SIM->BER, SIM->AverageIT, SIM->sumTime / SIM->num_Frames);
 		FILE *fp_H;
 		if (NULL == (fp_H = fopen("results.txt", "a")))
 		{
 			printf("can not open file: results.txt\n");
 			exit(0);
 		}
-		fprintf(fp_H, " %.1f %8d  %4d  %6.4e  %6.4e  %.2f  %6.4e %6.4e\n", SIM->SNR, SIM->num_Frames, SIM->num_Error_Frames, SIM->FER, SIM->BER, SIM->AverageIT, SIM->FER_False, SIM->FER_Alarm);
+		fprintf(fp_H, " %.1f %8d  %4d  %6.4e  %6.4e  %.2f  %6.4esec\n", SIM->SNR, SIM->num_Frames, SIM->num_Error_Frames, SIM->FER, SIM->BER, SIM->AverageIT, SIM->sumTime / SIM->num_Frames);
 		fclose(fp_H);
 		return 1;
 	}

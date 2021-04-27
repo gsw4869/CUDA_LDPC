@@ -100,13 +100,6 @@ int main()
 	cudaMalloc((void **)&TableInverse_GPU, H->GF * sizeof(unsigned));
 	cudaMemcpy(TableInverse_GPU, TableInverse, H->GF * sizeof(unsigned), cudaMemcpyHostToDevice); //GPU除法表
 
-	//GPU Array
-	// int *Checknode_weight;
-	// int *Variablenode_linkCNs;
-	// int *Checknode_linkVNs;
-	// int *Checknode_linkVNs_GF;
-	// GPUArray_initial(H, Variablenode, Checknode, Checknode_weight, Variablenode_linkCNs, Checknode_linkVNs, Checknode_linkVNs_GF);
-
 	int *Checknode_weight;
 	cudaMalloc((void **)&Checknode_weight, H->Checknode_num * sizeof(int));
 

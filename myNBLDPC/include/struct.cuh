@@ -47,6 +47,7 @@ typedef struct
 typedef struct
 {
 	float SNR; // 当前仿真的SNR
+	double sumTime;
 
 	long num_Frames;	   // 当前SNR下已经仿真的帧数
 	long num_Error_Frames; // 当前SNR下已经错误的帧数
