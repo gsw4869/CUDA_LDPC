@@ -14,16 +14,19 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-#define Matrixfile "BDS.576.288.GF.64.txt"
+// LDPC_N96_K48_GF256_d1_exp
+// Tanner_74_9_Z128_GF16
+
+#define Matrixfile "Tanner_74_9_Z128_GF16.txt"
 #define Constellationfile "./Constellation/BPSK.txt"
 #define n_QAM 2
-#define GFQ 64
-#define maxdc 4
-#define maxdv 2
+#define GFQ 16
+#define maxdc 21
+#define maxdv 3
 #define THREAD_NUM 0
 
 /*LDPC译码器相关参数*/
-#define maxIT 20 // LDPC译码器最大迭代次数.其中对Q值赋初值用了一次迭代
+#define maxIT 10 // LDPC译码器最大迭代次数.其中对Q值赋初值用了一次迭代
 //#define	opt_R				(0.83)								// NMS算法中的修正因子.浮点译码器
 #define decoder_method 0 // 译码算法:0->NMS;1->BP
 
@@ -37,12 +40,12 @@
 
 /*仿真参数*/
 #define startSNR 0
-#define stepSNR 0.5
-#define stopSNR 7
+#define stepSNR 1
+#define stopSNR 20
 
 #define leastErrorFrames 50 // 最少错误帧数
 #define leastTestFrames 10  // 最少仿真帧数
-#define displayStep 100000  // 定义将译码结果写入相应txt文件的频率
+#define displayStep 10000   // 定义将译码结果写入相应txt文件的频率
 
 /*CUDA c相应参数*/
 #define MaxThreadPerBlock 1024 // 针对GeForce GTX 1050而言.

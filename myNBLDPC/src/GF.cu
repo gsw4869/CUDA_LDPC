@@ -47,7 +47,7 @@ float **malloc_2_float(int xDim, int yDim)
 
 int GFAdd(int ele1, int ele2)
 {
-	return TableAdd[ele1][ele2];
+	return ele1 ^ ele2;
 }
 
 int GFMultiply(int ele1, int ele2)

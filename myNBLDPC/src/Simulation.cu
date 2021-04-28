@@ -51,7 +51,7 @@ void decode_once_cpu(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, cons
 
 		start = std::chrono::steady_clock::now();
 
-		Decoding_EMS(H, Variablenode, Checknode, H->GF, 1, DecodeOutput, iter_number);
+		Decoding_EMS(H, Variablenode, Checknode, 3, 3, DecodeOutput, iter_number);
 
 		end = std::chrono::steady_clock::now();
 
@@ -108,7 +108,7 @@ void decode_once_gpu(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, cons
 
 		start = std::chrono::steady_clock::now();
 
-		Decoding_EMS_GPU(H, Variablenode, Checknode, H->GF / 2, 2, DecodeOutput, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, iter_number);
+		Decoding_EMS_GPU(H, Variablenode, Checknode, 1, maxdc - 1, DecodeOutput, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, iter_number);
 
 		end = std::chrono::steady_clock::now();
 
@@ -279,7 +279,7 @@ int Statistic(Simulation *SIM, const int *CodeWord_Frames, int *D, const LDPCCod
 
 CComplex *Get_CONSTELLATION(LDPCCode *H)
 {
-	CComplex *CONSTELLATION = new CComplex[H->GF];
+	CComplex *CONSTELLATION = new CComplex[GFQ];
 
 	char temp[100];
 	FILE *fp_H;
@@ -333,7 +333,7 @@ void Get_H(LDPCCode *H, VN *Variablenode, CN *Checknode)
 
 	fscanf(fp_H, "%d", &H->GF); // GF域
 
-	switch (H->GF)
+	switch (GFQ)
 	{
 	case 4:
 		H->q_bit = 2;
@@ -377,11 +377,10 @@ void Get_H(LDPCCode *H, VN *Variablenode, CN *Checknode)
 			Variablenode[j * H->Variablenode_num + i].weight = index1;
 			Variablenode[j * H->Variablenode_num + i].linkCNs = (int *)malloc(Variablenode[i].weight * sizeof(int));
 			Variablenode[j * H->Variablenode_num + i].linkCNs_GF = (int *)malloc(Variablenode[i].weight * sizeof(int));
-			Variablenode[j * H->Variablenode_num + i].L_ch = (float *)malloc((H->GF - 1) * sizeof(float));
-			Variablenode[j * H->Variablenode_num + i].LLR = (float *)malloc((H->GF - 1) * sizeof(float));
-			Variablenode[j * H->Variablenode_num + i].Entr_v2c = malloc_2_float(Variablenode[i].weight, H->GF);
-			Variablenode[j * H->Variablenode_num + i].sort_L_v2c = malloc_2_float(Variablenode[i].weight, H->GF);
-			Variablenode[j * H->Variablenode_num + i].sort_Entr_v2c = malloc_2(Variablenode[i].weight, H->GF);
+			Variablenode[j * H->Variablenode_num + i].L_ch = (float *)malloc((GFQ - 1) * sizeof(float));
+			Variablenode[j * H->Variablenode_num + i].LLR = (float *)malloc((GFQ - 1) * sizeof(float));
+			Variablenode[j * H->Variablenode_num + i].sort_L_v2c = malloc_2_float(Variablenode[i].weight, GFQ);
+			Variablenode[j * H->Variablenode_num + i].sort_Entr_v2c = malloc_2(Variablenode[i].weight, GFQ);
 		}
 	}
 
@@ -393,7 +392,7 @@ void Get_H(LDPCCode *H, VN *Variablenode, CN *Checknode)
 			Checknode[j * H->Checknode_num + i].weight = index1;
 			Checknode[j * H->Checknode_num + i].linkVNs = (int *)malloc(Checknode[i].weight * sizeof(int));
 			Checknode[j * H->Checknode_num + i].linkVNs_GF = (int *)malloc(Checknode[i].weight * sizeof(int));
-			Checknode[j * H->Checknode_num + i].L_c2v = malloc_2_float(Checknode[i].weight, H->GF);
+			Checknode[j * H->Checknode_num + i].L_c2v = malloc_2_float(Checknode[i].weight, GFQ);
 		}
 	}
 

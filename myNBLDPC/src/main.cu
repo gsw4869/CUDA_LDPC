@@ -70,7 +70,7 @@ int main()
 	//
 	Get_H(H, Variablenode, Checknode); //初始化剩下的参数
 
-	GFInitial(H->GF);
+	GFInitial(GFQ);
 
 	CComplex *CONSTELLATION;
 	CONSTELLATION = Get_CONSTELLATION(H);
@@ -88,16 +88,16 @@ int main()
 	int CodeWord_sym_test[96] = {12, 26, 32, 18, 58, 59, 49, 24, 55, 48, 19, 14, 13, 2, 59, 15, 7, 43, 20, 8, 36, 54, 23, 7, 29, 2, 31, 43, 34, 30, 51, 57, 3, 14, 41, 38, 30, 58, 32, 26, 51, 48, 26, 23, 20, 63, 34, 51, 45, 62, 62, 13, 42, 33, 9, 61, 3, 25, 12, 51, 4, 48, 32, 48, 36, 42, 37, 14, 37, 21, 48, 39, 25, 51, 12, 23, 60, 51, 50, 15, 45, 35, 30, 23, 11, 45, 1, 25, 62, 47, 17, 25, 37, 32, 58, 56};
 
 	unsigned *TableMultiply_GPU;
-	cudaMalloc((void **)&TableMultiply_GPU, H->GF * H->GF * sizeof(unsigned));
-	cudaMemcpy(TableMultiply_GPU, TableMultiply[0], H->GF * H->GF * sizeof(unsigned), cudaMemcpyHostToDevice); //GPU乘法表
+	cudaMalloc((void **)&TableMultiply_GPU, GFQ * GFQ * sizeof(unsigned));
+	cudaMemcpy(TableMultiply_GPU, TableMultiply[0], GFQ * GFQ * sizeof(unsigned), cudaMemcpyHostToDevice); //GPU乘法表
 
 	unsigned *TableAdd_GPU;
-	cudaMalloc((void **)&TableAdd_GPU, H->GF * H->GF * sizeof(unsigned));
-	cudaMemcpy(TableAdd_GPU, TableAdd[0], H->GF * H->GF * sizeof(unsigned), cudaMemcpyHostToDevice); //GPU加法表
+	cudaMalloc((void **)&TableAdd_GPU, GFQ * GFQ * sizeof(unsigned));
+	cudaMemcpy(TableAdd_GPU, TableAdd[0], GFQ * GFQ * sizeof(unsigned), cudaMemcpyHostToDevice); //GPU加法表
 
 	unsigned *TableInverse_GPU;
-	cudaMalloc((void **)&TableInverse_GPU, H->GF * sizeof(unsigned));
-	cudaMemcpy(TableInverse_GPU, TableInverse, H->GF * sizeof(unsigned), cudaMemcpyHostToDevice); //GPU除法表
+	cudaMalloc((void **)&TableInverse_GPU, GFQ * sizeof(unsigned));
+	cudaMemcpy(TableInverse_GPU, TableInverse, GFQ * sizeof(unsigned), cudaMemcpyHostToDevice); //GPU除法表
 
 	int *Checknode_weight;
 	cudaMalloc((void **)&Checknode_weight, H->Checknode_num * sizeof(int));
@@ -142,7 +142,7 @@ int main()
 	{
 		for (int j = 0; j < Checknode[i].weight; j++)
 		{
-			Checknode_linkVNs_temp[i * maxdc + j] = Checknode[i].linkVNs[j];
+			Checknode_linkVNs_temp[i * maxdc + j] = Checknode[i].linkVNs[j] * GFQ * maxdv + index_in_VN(Checknode, i, j, Variablenode) * GFQ; //直接给到数组里的序号
 		}
 	}
 	cudaStatus = cudaMemcpy(Checknode_linkVNs, Checknode_linkVNs_temp, H->Checknode_num * maxdc * sizeof(int), cudaMemcpyHostToDevice);
@@ -176,22 +176,22 @@ int main()
 	{
 		CComplex_sym = (CComplex *)malloc(H->Variablenode_num * sizeof(CComplex));
 		BitToSym(H, CodeWord_sym, CodeWord_bit);
-		for (int i = 0; i < H->Variablenode_num; i++)
-		{
-			CodeWord_sym[i] = CodeWord_sym_test[i];
-		}
+		// for (int i = 0; i < H->Variablenode_num; i++)
+		// {
+		// 	CodeWord_sym[i] = CodeWord_sym_test[i];
+		// }
 		Modulate(H, CONSTELLATION, CComplex_sym, CodeWord_sym);
 	}
 	else
 	{
 		CComplex_sym = (CComplex *)malloc(H->bit_length * sizeof(CComplex));
-		for (int i = 0; i < H->Variablenode_num; i++)
-		{
-			for (int j = 0; j < H->q_bit; j++)
-			{
-				CodeWord_bit[i * H->q_bit + j] = (CodeWord_sym_test[i] & (1 << j)) >> j;
-			}
-		}
+		// for (int i = 0; i < H->Variablenode_num; i++)
+		// {
+		// 	for (int j = 0; j < H->q_bit; j++)
+		// 	{
+		// 		CodeWord_bit[i * H->q_bit + j] = (CodeWord_sym_test[i] & (1 << j)) >> j;
+		// 	}
+		// }
 		BitToSym(H, CodeWord_sym, CodeWord_bit);
 		Modulate(H, CONSTELLATION, CComplex_sym, CodeWord_bit);
 	}
@@ -224,10 +224,8 @@ int main()
 		SIM->FER_False = 0;
 		SIM->FER_Alarm = 0;
 
-		// BPSK(H,BPSK_Out,CodeWord);
-
-		Simulation_CPU((const LDPCCode *)H, AWGN, SIM, (const CComplex *)CONSTELLATION, Variablenode, Checknode, (const CComplex *)CComplex_sym, (const int *)CodeWord_sym);
-		// Simulation_GPU((const LDPCCode *)H, AWGN, SIM, (const CComplex *)CONSTELLATION, Variablenode, Checknode, (const CComplex *)CComplex_sym, CodeWord_sym, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF);
+		// Simulation_CPU((const LDPCCode *)H, AWGN, SIM, (const CComplex *)CONSTELLATION, Variablenode, Checknode, (const CComplex *)CComplex_sym, (const int *)CodeWord_sym);
+		Simulation_GPU((const LDPCCode *)H, AWGN, SIM, (const CComplex *)CONSTELLATION, Variablenode, Checknode, (const CComplex *)CComplex_sym, CodeWord_sym, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF);
 	}
 	cudaFree(TableMultiply_GPU);
 	cudaFree(TableAdd_GPU);

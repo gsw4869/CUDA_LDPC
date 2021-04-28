@@ -104,7 +104,7 @@ void Demodulate(const LDPCCode *H, AWGNChannel *AWGN, const CComplex *CONSTELLAT
 		// RX_LLE_BIT --> RX_LLR_SYM
 		for (int s = 0; s < H->Variablenode_num; s++)
 		{
-			for (int q = 1; q < H->GF; q++)
+			for (int q = 1; q < GFQ; q++)
 			{
 				Variablenode[s].L_ch[q - 1] = 0;
 				for (int b_p_s = 0; b_p_s < H->q_bit; b_p_s++)
@@ -121,7 +121,7 @@ void Demodulate(const LDPCCode *H, AWGNChannel *AWGN, const CComplex *CONSTELLAT
 	{
 		for (int s = 0; s < H->Variablenode_num; s++)
 		{
-			for (int q = 1; q < H->GF; q++)
+			for (int q = 1; q < GFQ; q++)
 			{
 				Variablenode[s].L_ch[q - 1] = ((2 * CComplex_sym_Channelout[s].Real - CONSTELLATION[0].Real - CONSTELLATION[q].Real) * (CONSTELLATION[q].Real - CONSTELLATION[0].Real) + (2 * CComplex_sym_Channelout[s].Image - CONSTELLATION[0].Image - CONSTELLATION[q].Image) * (CONSTELLATION[q].Image - CONSTELLATION[0].Image)) / (2 * AWGN->sigma * AWGN->sigma);
 			}
@@ -135,9 +135,9 @@ int Decoding_EMS(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm,
 	{
 		for (int d = 0; d < Variablenode[col].weight; d++)
 		{
-			for (int q = 0; q < H->GF; q++)
+			for (int q = 0; q < GFQ; q++)
 			{
-				Variablenode[col].Entr_v2c[d][q] = Variablenode[col].L_ch[q];
+				Variablenode[col].sort_L_v2c[d][q] = Variablenode[col].L_ch[q];
 			}
 		}
 	}
@@ -145,43 +145,34 @@ int Decoding_EMS(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm,
 	{
 		for (int d = 0; d < Checknode[row].weight; d++)
 		{
-			for (int q = 0; q < H->GF - 1; q++)
+			for (int q = 0; q < GFQ - 1; q++)
 			{
 				Checknode[row].L_c2v[d][q] = 0;
 			}
 		}
 	}
-	float *EMS_L_c2v = (float *)malloc(H->GF * sizeof(float));
-	int *index = (int *)malloc((H->GF) * sizeof(int));
+	float *EMS_L_c2v = (float *)malloc(GFQ * sizeof(float));
+	int *index = (int *)malloc((GFQ) * sizeof(int));
 
 	iter_number = 0;
 	bool decode_correct = true;
 	while (iter_number++ < maxIT - 1)
 	{
-		// printf("it_time: %d\n",iter_number);
 		for (int col = 0; col < H->Variablenode_num; col++)
 		{
-			for (int d = 0; d < Variablenode[col].weight; d++)
-			{
-				for (int q = 0; q < H->GF - 1; q++)
-				{
-					Variablenode[col].LLR[q] = Variablenode[col].L_ch[q];
-				}
-			}
+			memcpy(Variablenode[col].LLR, Variablenode[col].L_ch, (GFQ - 1) * sizeof(float));
 		}
 		for (int col = 0; col < H->Variablenode_num; col++)
 		{
 			for (int d = 0; d < Variablenode[col].weight; d++)
 			{
-				for (int q = 0; q < H->GF - 1; q++)
+				for (int q = 0; q < GFQ - 1; q++)
 				{
 					Variablenode[col].LLR[q] += Checknode[Variablenode[col].linkCNs[d]].L_c2v[index_in_CN(Variablenode, col, d, Checknode)][q];
 				}
 			}
-			DecodeOutput[col] = DecideLLRVector(Variablenode[col].LLR, H->GF);
-			// printf("%d ", DecodeOutput[col]);
+			DecodeOutput[col] = DecideLLRVector(Variablenode[col].LLR, GFQ);
 		}
-		// printf("\n");
 
 		decode_correct = true;
 		int sum_temp = 0;
@@ -209,26 +200,26 @@ int Decoding_EMS(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm,
 		{
 			for (int dv = 0; dv < Variablenode[col].weight; dv++)
 			{
-				for (int q = 0; q < H->GF - 1; q++)
+				for (int q = 0; q < GFQ - 1; q++)
 				{
-					Variablenode[col].Entr_v2c[dv][q] = Variablenode[col].LLR[q] - Checknode[Variablenode[col].linkCNs[dv]].L_c2v[index_in_CN(Variablenode, col, dv, Checknode)][q];
+					Variablenode[col].sort_L_v2c[dv][q] = Variablenode[col].LLR[q] - Checknode[Variablenode[col].linkCNs[dv]].L_c2v[index_in_CN(Variablenode, col, dv, Checknode)][q];
 				}
+				Variablenode[col].sort_L_v2c[dv][GFQ - 1] = 0;
 			}
 		}
 
 		for (int col = 0; col < H->Variablenode_num; col++)
 		{
-			memcpy(Variablenode[col].sort_L_v2c[0], Variablenode[col].Entr_v2c[0], Variablenode[col].weight * H->GF * sizeof(float));
 
 			for (int dv = 0; dv < Variablenode[col].weight; dv++)
 			{
-				for (int i = 0; i < H->GF - 1; i++)
+				for (int i = 0; i < GFQ - 1; i++)
 				{
 					index[i] = i + 1;
 				}
-				index[H->GF - 1] = 0;
-				SortLLRVector(H->GF, Variablenode[col].sort_L_v2c[dv], index);
-				for (int i = 0; i < H->GF; i++)
+				index[GFQ - 1] = 0;
+				SortLLRVector(GFQ, Variablenode[col].sort_L_v2c[dv], index);
+				for (int i = 0; i < GFQ; i++)
 				{
 					Variablenode[col].sort_Entr_v2c[dv][i] = index[i];
 				}
@@ -242,7 +233,7 @@ int Decoding_EMS(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm,
 			for (int dc = 0; dc < Checknode[row].weight; dc++)
 			{
 				// reset the sum store vector to the munimum
-				for (int q = 0; q < H->GF; q++)
+				for (int q = 0; q < GFQ; q++)
 				{
 					EMS_L_c2v[q] = -DBL_MAX;
 				}
@@ -254,7 +245,7 @@ int Decoding_EMS(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm,
 				sumNonele = 0;
 				sumNonLLR = 0;
 				diff = 0;
-				ConstructConf(Checknode, Variablenode, H->GF, 1, sumNonele, sumNonLLR, diff, 0, dc, Checknode[row].weight - 1, row, EMS_L_c2v);
+				ConstructConf(Checknode, Variablenode, GFQ, 1, sumNonele, sumNonLLR, diff, 0, dc, Checknode[row].weight - 1, row, EMS_L_c2v);
 
 				// conf(nm, nc)
 				sumNonele = 0;
@@ -264,7 +255,7 @@ int Decoding_EMS(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm,
 
 				// calculate each c2v LLR
 				int v = 0;
-				for (int k = 1; k < H->GF; k++)
+				for (int k = 1; k < GFQ; k++)
 				{
 					v = GFMultiply(k, Checknode[row].linkVNs_GF[dc]);
 					Checknode[row].L_c2v[dc][k - 1] = (EMS_L_c2v[v] - EMS_L_c2v[0]) / 1.2;

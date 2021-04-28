@@ -8,19 +8,11 @@
 
 __device__ int GFAdd_GPU(int ele1, int ele2, const unsigned *TableAdd_GPU)
 {
-    if (ele1 >= GFQ | ele2 >= GFQ)
-    {
-        printf("error");
-    }
-    return TableAdd_GPU[GFQ * ele1 + ele2];
+    return ele1 ^ ele2;
 }
 
 __device__ int GFMultiply_GPU(int ele1, int ele2, const unsigned *TableMultiply_GPU)
 {
-    if (ele1 >= GFQ | ele2 >= GFQ)
-    {
-        printf("error");
-    }
     return TableMultiply_GPU[GFQ * ele1 + ele2];
 }
 
@@ -33,18 +25,6 @@ __device__ int GFInverse_GPU(int ele, const unsigned *TableInverse_GPU)
     return TableInverse_GPU[ele];
 }
 
-__device__ int index_in_VN_GPU(const int *Checknode_linkVNs, int Checknode_num, int index_in_linkVNs, const int *Variablenode_linkCNs)
-{
-    for (int i = 0; i < maxdv; i++)
-    {
-        if (Variablenode_linkCNs[maxdv * Checknode_linkVNs[maxdc * Checknode_num + index_in_linkVNs] + i] == Checknode_num)
-        {
-            return i;
-        }
-    }
-    printf("index_in_VN_GPU error\n");
-}
-
 int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, const unsigned *TableMultiply_GPU, const unsigned *TableAdd_GPU, const int *Checknode_weight, const int *Variablenode_linkCNs, const int *Checknode_linkVNs, const int *Checknode_linkVNs_GF, int &iter_number)
 {
 
@@ -52,20 +32,15 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
     {
         for (int d = 0; d < Variablenode[col].weight; d++)
         {
-            for (int q = 0; q < H->GF; q++)
-            {
-                Variablenode[col].Entr_v2c[d][q] = Variablenode[col].L_ch[q];
-            }
+            memcpy(Variablenode[col].sort_L_v2c[d], Variablenode[col].L_ch, (GFQ - 1) * sizeof(float));
         }
     }
+
     for (int row = 0; row < H->Checknode_num; row++)
     {
         for (int d = 0; d < Checknode[row].weight; d++)
         {
-            for (int q = 0; q < H->GF - 1; q++)
-            {
-                Checknode[row].L_c2v[d][q] = 0;
-            }
+            memset(Checknode[row].L_c2v[d], 0, (GFQ - 1) * sizeof(float));
         }
     }
     int *sort_Entr_v2c_temp = (int *)malloc(H->Variablenode_num * maxdv * GFQ * sizeof(int));
@@ -83,36 +58,27 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
     float *Checknode_L_c2v;
     cudaMalloc((void **)&Checknode_L_c2v, H->Checknode_num * maxdc * GFQ * sizeof(float));
 
-    int *index = (int *)malloc((H->GF) * sizeof(int));
+    int *index = (int *)malloc((GFQ) * sizeof(int));
 
     iter_number = 0;
     bool decode_correct = true;
     while (iter_number++ < maxIT - 1)
     {
-        // printf("it_time: %d\n",iter_number);
         for (int col = 0; col < H->Variablenode_num; col++)
         {
-            for (int d = 0; d < Variablenode[col].weight; d++)
-            {
-                for (int q = 0; q < H->GF - 1; q++)
-                {
-                    Variablenode[col].LLR[q] = Variablenode[col].L_ch[q];
-                }
-            }
+            memcpy(Variablenode[col].LLR, Variablenode[col].L_ch, (GFQ - 1) * sizeof(float));
         }
         for (int col = 0; col < H->Variablenode_num; col++)
         {
             for (int d = 0; d < Variablenode[col].weight; d++)
             {
-                for (int q = 0; q < H->GF - 1; q++)
+                for (int q = 0; q < GFQ - 1; q++)
                 {
                     Variablenode[col].LLR[q] += Checknode[Variablenode[col].linkCNs[d]].L_c2v[index_in_CN(Variablenode, col, d, Checknode)][q];
                 }
             }
-            DecodeOutput[col] = DecideLLRVector(Variablenode[col].LLR, H->GF);
-            // printf("%d ", DecodeOutput[col]);
+            DecodeOutput[col] = DecideLLRVector(Variablenode[col].LLR, GFQ);
         }
-        // printf("\n");
 
         decode_correct = true;
         int sum_temp = 0;
@@ -145,26 +111,25 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
         {
             for (int dv = 0; dv < Variablenode[col].weight; dv++)
             {
-                for (int q = 0; q < H->GF - 1; q++)
+                for (int q = 0; q < GFQ - 1; q++)
                 {
-                    Variablenode[col].Entr_v2c[dv][q] = Variablenode[col].LLR[q] - Checknode[Variablenode[col].linkCNs[dv]].L_c2v[index_in_CN(Variablenode, col, dv, Checknode)][q];
+                    Variablenode[col].sort_L_v2c[dv][q] = Variablenode[col].LLR[q] - Checknode[Variablenode[col].linkCNs[dv]].L_c2v[index_in_CN(Variablenode, col, dv, Checknode)][q];
                 }
+                Variablenode[col].sort_L_v2c[dv][GFQ - 1] = 0;
             }
         }
 
         for (int col = 0; col < H->Variablenode_num; col++)
         {
-            memcpy(Variablenode[col].sort_L_v2c[0], Variablenode[col].Entr_v2c[0], Variablenode[col].weight * H->GF * sizeof(float));
-
             for (int dv = 0; dv < Variablenode[col].weight; dv++)
             {
-                for (int i = 0; i < H->GF - 1; i++)
+                for (int i = 0; i < GFQ - 1; i++)
                 {
                     index[i] = i + 1;
                 }
-                index[H->GF - 1] = 0;
-                SortLLRVector(H->GF, Variablenode[col].sort_L_v2c[dv], index);
-                for (int i = 0; i < H->GF; i++)
+                index[GFQ - 1] = 0;
+                SortLLRVector(GFQ, Variablenode[col].sort_L_v2c[dv], index);
+                for (int i = 0; i < GFQ; i++)
                 {
                     Variablenode[col].sort_Entr_v2c[dv][i] = index[i];
 
@@ -189,7 +154,7 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
         // // message from check to var
 
         Checknode_EMS<<<((H->Checknode_num % 128) ? (H->Checknode_num / 128 + 1) : (H->Checknode_num / 128)), 128>>>((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, EMS_Nm, EMS_Nc, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, H->Checknode_num);
-        // Checknode_EMS<<<1, 1>>>(TableMultiply_GPU, TableAdd_GPU, EMS_Nm, EMS_Nc, Checknode_weight, Variablenode_linkCNs, Checknode_linkVNs, Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, H->Checknode_num);
+        // Checknode_EMS<<<1, 1>>>((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, EMS_Nm, EMS_Nc, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, H->Checknode_num);
 
         cudaStatus = cudaMemcpy(Checknode_L_c2v_temp, Checknode_L_c2v, H->Checknode_num * maxdc * GFQ * sizeof(float), cudaMemcpyDeviceToHost);
         if (cudaStatus != cudaSuccess)
@@ -247,13 +212,51 @@ __global__ void Checknode_EMS(const unsigned *TableMultiply_GPU, const unsigned 
                 }
 
                 // recursly exhaustly
-                int sumNonele, diff;
+                int sumNonele;
                 float sumNonLLR;
                 // conf(q, 1)
                 sumNonele = 0;
                 sumNonLLR = 0;
-                diff = 0;
-                ConstructConf_GPU((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, GFQ, 1, sumNonele, sumNonLLR, diff, 0, dc, Checknode_weight[offset] - 1, offset, EMS_L_c2v, (const int *)Variblenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c);
+                // ConstructConf_GPU((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, GFQ, 1, sumNonele, sumNonLLR, diff, 0, dc, Checknode_weight[offset] - 1, offset, EMS_L_c2v, (const int *)Variblenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c);
+
+                for (int i = 0; i < Checknode_weight[offset]; i++)
+                {
+                    if (i == dc)
+                    {
+                        continue;
+                    }
+
+                    sumNonele = GFAdd_GPU(GFMultiply_GPU(sort_Entr_v2c[Checknode_linkVNs[offset * maxdc + i]], Checknode_linkVNs_GF[offset * maxdc + i], TableMultiply_GPU), sumNonele, TableAdd_GPU);
+                    sumNonLLR = sumNonLLR + sort_L_v2c[Checknode_linkVNs[offset * maxdc + i]];
+                }
+                if (sumNonLLR > EMS_L_c2v[sumNonele])
+                {
+                    EMS_L_c2v[sumNonele] = sumNonLLR;
+                }
+                int sumNonele_all_max = sumNonele;
+                float sumNonLLR_all_max = sumNonLLR;
+                for (int i = 0; i < Checknode_weight[offset]; i++)
+                {
+                    if (i == dc)
+                    {
+                        continue;
+                    }
+
+                    sumNonele = GFAdd_GPU(GFMultiply_GPU(sort_Entr_v2c[Checknode_linkVNs[offset * maxdc + i]], Checknode_linkVNs_GF[offset * maxdc + i], TableMultiply_GPU), sumNonele_all_max, TableAdd_GPU);
+                    sumNonLLR = sumNonLLR_all_max - sort_L_v2c[Checknode_linkVNs[offset * maxdc + i]];
+
+                    for (int k = 1; k < GFQ; k++)
+                    {
+
+                        int sumNonele1 = GFAdd_GPU(GFMultiply_GPU(sort_Entr_v2c[Checknode_linkVNs[offset * maxdc + i] + k], Checknode_linkVNs_GF[offset * maxdc + i], TableMultiply_GPU), sumNonele, TableAdd_GPU);
+                        float sumNonLLR1 = sumNonLLR + sort_L_v2c[Checknode_linkVNs[offset * maxdc + i] + k];
+
+                        if (sumNonLLR1 > EMS_L_c2v[sumNonele1])
+                        {
+                            EMS_L_c2v[sumNonele1] = sumNonLLR1;
+                        }
+                    }
+                }
 
                 // conf(nm, nc)
                 // sumNonele = 0;
@@ -261,6 +264,55 @@ __global__ void Checknode_EMS(const unsigned *TableMultiply_GPU, const unsigned 
                 // diff = 0;
                 // ConstructConf_GPU((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, EMS_Nm, EMS_Nc, sumNonele, sumNonLLR, diff, 0, dc, Checknode_weight[offset] - 1, offset, EMS_L_c2v, (const int *)Variblenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c);
 
+                int *conf_index = (int *)malloc((Checknode_weight[offset] - 1) * sizeof(int));
+                memset(conf_index, 0, (Checknode_weight[offset] - 1) * sizeof(int));
+
+                int flag = 0;
+
+                while (!flag)
+                {
+                    sumNonele = 0;
+                    sumNonLLR = 0;
+                    for (int i = 0; i < Checknode_weight[offset] - 1; i++)
+                    {
+                        conf_index[i] += 1; // move confset[i] to smaller one
+
+                        if (i == Checknode_weight[offset] - 2 && conf_index[i] == EMS_Nm)
+                        { // reaches end
+                            flag = 1;
+                            break;
+                        }
+                        else if (conf_index[i] >= EMS_Nm)
+                        {
+                            conf_index[i] = 0;
+                            // continue to modify next VN
+                        }
+                        else
+                        {
+                            break; // don't modify next VN
+                        }
+                    }
+                    if (!flag)
+                    {
+                        int k = 0;
+                        for (int i = 0; i < Checknode_weight[offset]; i++)
+                        {
+                            if (i == dc)
+                            {
+                                continue;
+                            }
+
+                            sumNonele = GFAdd_GPU(GFMultiply_GPU(sort_Entr_v2c[Checknode_linkVNs[offset * maxdc + i] + conf_index[k]], Checknode_linkVNs_GF[offset * maxdc + i], TableMultiply_GPU), sumNonele, TableAdd_GPU);
+                            sumNonLLR = sumNonLLR + sort_L_v2c[Checknode_linkVNs[offset * maxdc + i] + conf_index[k]];
+                            k++;
+                        }
+                        if (sumNonLLR > EMS_L_c2v[sumNonele])
+                        {
+                            EMS_L_c2v[sumNonele] = sumNonLLR;
+                        }
+                    }
+                }
+                free(conf_index);
                 // calculate each c2v LLR
                 int v = 0;
                 Checknode_L_c2v[offset * maxdc * GFQ + dc * GFQ + GFQ - 1] = 0;
@@ -331,49 +383,4 @@ __device__ int ConstructConf_GPU(const unsigned *TableMultiply_GPU, const unsign
     //     }
     // }
     // return 0;
-    for (int i = 0; i < end + 1; i++)
-    {
-        if (i == except)
-        {
-            continue;
-        }
-        int index = index_in_VN_GPU(Checknode_linkVNs, row, i, Variblenode_linkCNs);
-        sumNonele = GFAdd_GPU(GFMultiply_GPU(sort_Entr_v2c[Checknode_linkVNs[row * maxdc + i] * maxdv * GFQ + index * GFQ], Checknode_linkVNs_GF[row * maxdc + i], TableMultiply_GPU), sumNonele, TableAdd_GPU);
-        sumNonLLR = sumNonLLR + sort_L_v2c[Checknode_linkVNs[row * maxdc + i] * maxdv * GFQ + index * GFQ];
-    }
-    if (sumNonLLR > EMS_L_c2v[sumNonele])
-    {
-        EMS_L_c2v[sumNonele] = sumNonLLR;
-    }
-    for (int i = 0; i < end + 1; i++)
-    {
-        if (i == except)
-        {
-            continue;
-        }
-        for (int k = 1; k < GFQ; k++)
-        {
-
-            int index = index_in_VN_GPU(Checknode_linkVNs, row, i, Variblenode_linkCNs);
-            sumNonele = 0;
-            sumNonLLR = 0;
-            sumNonele = GFAdd_GPU(GFMultiply_GPU(sort_Entr_v2c[Checknode_linkVNs[row * maxdc + i] * maxdv * GFQ + index * GFQ + k], Checknode_linkVNs_GF[row * maxdc + i], TableMultiply_GPU), sumNonele, TableAdd_GPU);
-            sumNonLLR = sumNonLLR + sort_L_v2c[Checknode_linkVNs[row * maxdc + i] * maxdv * GFQ + index * GFQ + k];
-
-            for (int j = 0; j < end + 1; j++)
-            {
-                if (j == i | j == except)
-                {
-                    continue;
-                }
-                int index = index_in_VN_GPU(Checknode_linkVNs, row, j, Variblenode_linkCNs);
-                sumNonele = GFAdd_GPU(GFMultiply_GPU(sort_Entr_v2c[Checknode_linkVNs[row * maxdc + j] * maxdv * GFQ + index * GFQ], Checknode_linkVNs_GF[row * maxdc + j], TableMultiply_GPU), sumNonele, TableAdd_GPU);
-                sumNonLLR = sumNonLLR + sort_L_v2c[Checknode_linkVNs[row * maxdc + j] * maxdv * GFQ + index * GFQ];
-            }
-            if (sumNonLLR > EMS_L_c2v[sumNonele])
-            {
-                EMS_L_c2v[sumNonele] = sumNonLLR;
-            }
-        }
-    }
 }
