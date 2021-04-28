@@ -6,7 +6,7 @@
 #include <sstream>
 #include <assert.h>
 
-__device__ int GFAdd_GPU(int ele1, int ele2, unsigned *TableAdd_GPU)
+__device__ int GFAdd_GPU(int ele1, int ele2, const unsigned *TableAdd_GPU)
 {
     if (ele1 >= GFQ | ele2 >= GFQ)
     {
@@ -15,7 +15,7 @@ __device__ int GFAdd_GPU(int ele1, int ele2, unsigned *TableAdd_GPU)
     return TableAdd_GPU[GFQ * ele1 + ele2];
 }
 
-__device__ int GFMultiply_GPU(int ele1, int ele2, unsigned *TableMultiply_GPU)
+__device__ int GFMultiply_GPU(int ele1, int ele2, const unsigned *TableMultiply_GPU)
 {
     if (ele1 >= GFQ | ele2 >= GFQ)
     {
@@ -24,7 +24,7 @@ __device__ int GFMultiply_GPU(int ele1, int ele2, unsigned *TableMultiply_GPU)
     return TableMultiply_GPU[GFQ * ele1 + ele2];
 }
 
-__device__ int GFInverse_GPU(int ele, unsigned *TableInverse_GPU)
+__device__ int GFInverse_GPU(int ele, const unsigned *TableInverse_GPU)
 {
     if (ele == 0)
     {
@@ -33,7 +33,7 @@ __device__ int GFInverse_GPU(int ele, unsigned *TableInverse_GPU)
     return TableInverse_GPU[ele];
 }
 
-__device__ int index_in_VN_GPU(int *Checknode_linkVNs, int Checknode_num, int index_in_linkVNs, int *Variablenode_linkCNs)
+__device__ int index_in_VN_GPU(const int *Checknode_linkVNs, int Checknode_num, int index_in_linkVNs, const int *Variablenode_linkCNs)
 {
     for (int i = 0; i < maxdv; i++)
     {
@@ -45,7 +45,7 @@ __device__ int index_in_VN_GPU(int *Checknode_linkVNs, int Checknode_num, int in
     printf("index_in_VN_GPU error\n");
 }
 
-int Decoding_EMS_GPU(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, unsigned *TableMultiply_GPU, unsigned *TableAdd_GPU, int *Checknode_weight, int *Variablenode_linkCNs, int *Checknode_linkVNs, int *Checknode_linkVNs_GF, int &iter_number)
+int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, const unsigned *TableMultiply_GPU, const unsigned *TableAdd_GPU, const int *Checknode_weight, const int *Variablenode_linkCNs, const int *Checknode_linkVNs, const int *Checknode_linkVNs_GF, int &iter_number)
 {
 
     for (int col = 0; col < H->Variablenode_num; col++)
@@ -188,7 +188,7 @@ int Decoding_EMS_GPU(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, i
         }
         // // message from check to var
 
-        Checknode_EMS<<<((H->Checknode_num % 128) ? (H->Checknode_num / 128 + 1) : (H->Checknode_num / 128)), 128>>>(TableMultiply_GPU, TableAdd_GPU, EMS_Nm, EMS_Nc, Checknode_weight, Variablenode_linkCNs, Checknode_linkVNs, Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, H->Checknode_num);
+        Checknode_EMS<<<((H->Checknode_num % 128) ? (H->Checknode_num / 128 + 1) : (H->Checknode_num / 128)), 128>>>((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, EMS_Nm, EMS_Nc, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, H->Checknode_num);
         // Checknode_EMS<<<1, 1>>>(TableMultiply_GPU, TableAdd_GPU, EMS_Nm, EMS_Nc, Checknode_weight, Variablenode_linkCNs, Checknode_linkVNs, Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, H->Checknode_num);
 
         cudaStatus = cudaMemcpy(Checknode_L_c2v_temp, Checknode_L_c2v, H->Checknode_num * maxdc * GFQ * sizeof(float), cudaMemcpyDeviceToHost);
@@ -229,7 +229,7 @@ sort_Entr_v2c:每个变量节点重量dv，q,q,q一共dv个，然后再乘以变
 sort_L_v2c:和sort_Entr_v2c对应的LLR
 Checknode_L_c2v:每个校验节点重量dc，q一共dc个，然后再乘以变量节点个数[校验节点个数][校验节点重量][q]
 */
-__global__ void Checknode_EMS(unsigned *TableMultiply_GPU, unsigned *TableAdd_GPU, int EMS_Nm, int EMS_Nc, int *Checknode_weight, int *Variblenode_linkCNs, int *Checknode_linkVNs, int *Checknode_linkVNs_GF, int *sort_Entr_v2c, float *sort_L_v2c, float *Checknode_L_c2v, int Checknode_num)
+__global__ void Checknode_EMS(const unsigned *TableMultiply_GPU, const unsigned *TableAdd_GPU, int EMS_Nm, int EMS_Nc, const int *Checknode_weight, const int *Variblenode_linkCNs, const int *Checknode_linkVNs, const int *Checknode_linkVNs_GF, int *sort_Entr_v2c, float *sort_L_v2c, float *Checknode_L_c2v, int Checknode_num)
 {
     int offset;
     offset = threadIdx.x + blockDim.x * blockIdx.x;
@@ -253,13 +253,13 @@ __global__ void Checknode_EMS(unsigned *TableMultiply_GPU, unsigned *TableAdd_GP
                 sumNonele = 0;
                 sumNonLLR = 0;
                 diff = 0;
-                ConstructConf_GPU(TableMultiply_GPU, TableAdd_GPU, GFQ, 1, sumNonele, sumNonLLR, diff, 0, dc, Checknode_weight[offset] - 1, offset, EMS_L_c2v, Variblenode_linkCNs, Checknode_linkVNs, Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c);
+                ConstructConf_GPU((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, GFQ, 1, sumNonele, sumNonLLR, diff, 0, dc, Checknode_weight[offset] - 1, offset, EMS_L_c2v, (const int *)Variblenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c);
 
                 // conf(nm, nc)
                 // sumNonele = 0;
                 // sumNonLLR = 0;
                 // diff = 0;
-                // ConstructConf_GPU(TableMultiply_GPU, TableAdd_GPU, EMS_Nm, EMS_Nc, sumNonele, sumNonLLR, diff, 0, dc, Checknode_weight[offset] - 1, offset, EMS_L_c2v, Variblenode_linkCNs, Checknode_linkVNs, Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c);
+                // ConstructConf_GPU((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, EMS_Nm, EMS_Nc, sumNonele, sumNonLLR, diff, 0, dc, Checknode_weight[offset] - 1, offset, EMS_L_c2v, (const int *)Variblenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c);
 
                 // calculate each c2v LLR
                 int v = 0;
@@ -280,7 +280,7 @@ __global__ void Checknode_EMS(unsigned *TableMultiply_GPU, unsigned *TableAdd_GP
         }
     }
 }
-__device__ int ConstructConf_GPU(unsigned *TableMultiply_GPU, unsigned *TableAdd_GPU, int Nm, int Nc, int &sumNonele, float &sumNonLLR, int &diff, int begin, int except, int end, int row, float *EMS_L_c2v, int *Variblenode_linkCNs, int *Checknode_linkVNs, int *Checknode_linkVNs_GF, int *sort_Entr_v2c, float *sort_L_v2c)
+__device__ int ConstructConf_GPU(const unsigned *TableMultiply_GPU, const unsigned *TableAdd_GPU, int Nm, int Nc, int &sumNonele, float &sumNonLLR, int &diff, int begin, int except, int end, int row, float *EMS_L_c2v, const int *Variblenode_linkCNs, const int *Checknode_linkVNs, const int *Checknode_linkVNs_GF, int *sort_Entr_v2c, float *sort_L_v2c)
 {
     // if (begin > end)
     // {

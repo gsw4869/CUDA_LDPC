@@ -89,7 +89,7 @@ int index_in_CN(VN *Variablenode, int VNnum, int index_in_linkCNS, CN *Checknode
 	exit(0);
 }
 
-void Demodulate(LDPCCode *H, AWGNChannel *AWGN, CComplex *CONSTELLATION, VN *Variablenode, CComplex *CComplex_sym_Channelout)
+void Demodulate(const LDPCCode *H, AWGNChannel *AWGN, const CComplex *CONSTELLATION, VN *Variablenode, CComplex *CComplex_sym_Channelout)
 {
 	float *RX_LLR_BIT = (float *)malloc(H->bit_length * sizeof(float));
 	if (n_QAM == 2)
@@ -129,7 +129,7 @@ void Demodulate(LDPCCode *H, AWGNChannel *AWGN, CComplex *CONSTELLATION, VN *Var
 	}
 	free(RX_LLR_BIT);
 }
-int Decoding_EMS(LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, int &iter_number)
+int Decoding_EMS(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, int &iter_number)
 {
 	for (int col = 0; col < H->Variablenode_num; col++)
 	{

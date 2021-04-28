@@ -57,11 +57,14 @@ int main()
 		exit(0);
 	}
 
+	int threadNum =
+		THREAD_NUM ? THREAD_NUM : std::thread::hardware_concurrency();
+
 	fscanf(fp_H, "%d", &H->Variablenode_num); // 变量节点个数（行数）
-	Variablenode = (VN *)malloc(H->Variablenode_num * sizeof(VN));
+	Variablenode = (VN *)malloc(H->Variablenode_num * threadNum * sizeof(VN));
 
 	fscanf(fp_H, "%d", &H->Checknode_num); // 校验节点个数（列数）
-	Checknode = (CN *)malloc(H->Checknode_num * sizeof(CN));
+	Checknode = (CN *)malloc(H->Checknode_num * threadNum * sizeof(CN));
 
 	fclose(fp_H);
 	//
@@ -81,10 +84,6 @@ int main()
 	int *CodeWord_sym;
 	CodeWord_sym = (int *)malloc(H->Variablenode_num * sizeof(int));
 	memset(CodeWord_sym, 0, H->Variablenode_num * sizeof(int));
-
-	int *DecodeOutput;
-	DecodeOutput = (int *)malloc(H->Variablenode_num * sizeof(int));
-	memset(DecodeOutput, 0, H->Variablenode_num * sizeof(int));
 
 	int CodeWord_sym_test[96] = {12, 26, 32, 18, 58, 59, 49, 24, 55, 48, 19, 14, 13, 2, 59, 15, 7, 43, 20, 8, 36, 54, 23, 7, 29, 2, 31, 43, 34, 30, 51, 57, 3, 14, 41, 38, 30, 58, 32, 26, 51, 48, 26, 23, 20, 63, 34, 51, 45, 62, 62, 13, 42, 33, 9, 61, 3, 25, 12, 51, 4, 48, 32, 48, 36, 42, 37, 14, 37, 21, 48, 39, 25, 51, 12, 23, 60, 51, 50, 15, 45, 35, 30, 23, 11, 45, 1, 25, 62, 47, 17, 25, 37, 32, 58, 56};
 
@@ -197,13 +196,13 @@ int main()
 		Modulate(H, CONSTELLATION, CComplex_sym, CodeWord_bit);
 	}
 
+	printf("sim start\n");
 	for (SIM->SNR = startSNR; SIM->SNR <= stopSNR; SIM->SNR += stepSNR)
 	{
 		AWGN->seed[0] = ix_define;
 		AWGN->seed[1] = iy_define;
 		AWGN->seed[2] = iz_define;
 		AWGN->sigma = 0;
-
 		if (snrtype == 0)
 		{
 			AWGN->sigma = (float)sqrt(0.5 / (log(n_QAM) / log(2) * H->rate * (pow(10.0, (SIM->SNR / 10.0))))); //(float)LDPC->msgLen / LDPC->codewordLen;
@@ -218,18 +217,17 @@ int main()
 		SIM->Total_Iteration = 0;
 		SIM->num_False_Frames = 0;
 		SIM->num_Alarm_Frames = 0;
+		SIM->sumTime = 0;
+		SIM->FER = 0;
+		SIM->BER = 0;
+		SIM->AverageIT = 0;
+		SIM->FER_False = 0;
+		SIM->FER_Alarm = 0;
 
 		// BPSK(H,BPSK_Out,CodeWord);
 
-		// Simulation_CPU(H, AWGN, SIM, CONSTELLATION, Variablenode, Checknode, CComplex_sym, CodeWord_sym, DecodeOutput);
-		Simulation_GPU(H, AWGN, SIM, CONSTELLATION, Variablenode, Checknode, CComplex_sym, CodeWord_sym, DecodeOutput, TableMultiply_GPU, TableAdd_GPU, Checknode_weight, Variablenode_linkCNs, Checknode_linkVNs, Checknode_linkVNs_GF);
-
-		// for(int i=0;i<H->Variablenode_num;i++)
-		// {
-		// 	printf("%f + %f i\n",CComplex_sym_Channelout[i].Real,CComplex_sym_Channelout[i].Image);
-		// }
-		// printf("\n");
-		// exit(0);
+		Simulation_CPU((const LDPCCode *)H, AWGN, SIM, (const CComplex *)CONSTELLATION, Variablenode, Checknode, (const CComplex *)CComplex_sym, (const int *)CodeWord_sym);
+		// Simulation_GPU((const LDPCCode *)H, AWGN, SIM, (const CComplex *)CONSTELLATION, Variablenode, Checknode, (const CComplex *)CComplex_sym, CodeWord_sym, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF);
 	}
 	cudaFree(TableMultiply_GPU);
 	cudaFree(TableAdd_GPU);
@@ -240,9 +238,9 @@ int main()
 	cudaFree(Checknode_linkVNs_GF);
 	free(AWGN);
 	free(SIM);
+	freeCN(H, Checknode);
+	freeVN(H, Variablenode);
 	free(H);
-	free(Checknode);
-	free(Variablenode);
 	free(CodeWord_sym);
 	free(CodeWord_bit);
 	free(CComplex_sym);

@@ -20,6 +20,7 @@
 #define GFQ 64
 #define maxdc 4
 #define maxdv 2
+#define THREAD_NUM 0
 
 /*LDPC译码器相关参数*/
 #define maxIT 20 // LDPC译码器最大迭代次数.其中对Q值赋初值用了一次迭代
@@ -41,7 +42,7 @@
 
 #define leastErrorFrames 50 // 最少错误帧数
 #define leastTestFrames 10  // 最少仿真帧数
-#define displayStep 10000   // 定义将译码结果写入相应txt文件的频率
+#define displayStep 100000  // 定义将译码结果写入相应txt文件的频率
 
 /*CUDA c相应参数*/
 #define MaxThreadPerBlock 1024 // 针对GeForce GTX 1050而言.

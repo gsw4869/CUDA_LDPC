@@ -15,7 +15,7 @@ void BitToSym(LDPCCode *H, int *CodeWord_sym, int *CodeWord_bit)
 	}
 }
 
-void Modulate(LDPCCode *H, CComplex *CONSTELLATION, CComplex *CComplex_sym, int *CodeWord_sym)
+void Modulate(const LDPCCode *H, CComplex *CONSTELLATION, CComplex *CComplex_sym, int *CodeWord_sym)
 {
 	if (n_QAM != 2)
 	{
@@ -38,7 +38,7 @@ void Modulate(LDPCCode *H, CComplex *CONSTELLATION, CComplex *CComplex_sym, int 
 * CodeWord：原始码组
 * Channel_Out：经过BPSK调制的输出信号
 */
-void AWGNChannel_CPU(LDPCCode *H, AWGNChannel *AWGN, CComplex *CComplex_sym_Channelout, CComplex *CComplex_sym)
+void AWGNChannel_CPU(const LDPCCode *H, AWGNChannel *AWGN, CComplex *CComplex_sym_Channelout, const CComplex *CComplex_sym)
 {
 	int index0, len;
 	float u1, u2, temp;

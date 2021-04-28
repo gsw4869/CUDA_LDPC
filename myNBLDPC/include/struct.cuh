@@ -2,15 +2,19 @@
 #define _STRUCT_H_
 
 #include "define.cuh"
+#include <mutex>
+#include <thread>
+#include <vector>
 
-typedef struct
+class CComplex
 {
+public:
 	float Real;
 	float Image;
-} CComplex;
-typedef struct
+};
+class LDPCCode
 {
-	int iteraTime; // 当前帧完成译码所用的迭代次数,统计用
+public:
 	int maxWeight_checknode;
 	int maxWeight_variablenode;
 	int GF;
@@ -19,9 +23,10 @@ typedef struct
 	float rate;
 	int bit_length; //比特长度
 	int q_bit;		//=log2(GF)
-} LDPCCode;
-typedef struct
+};
+class VN
 {
+public:
 	int *linkCNs;
 	int *linkCNs_GF;
 	int weight;
@@ -30,22 +35,25 @@ typedef struct
 	float **Entr_v2c;		  //变量节点传给校验节点的值，[连接的节点的序号][各GF对应的LLR]
 	float **sort_L_v2c;		  //排序过后的
 	unsigned **sort_Entr_v2c; //将GF（q）的元素排序，[连接的节点的序号][GF元素]
-} VN;
-typedef struct
+};
+class CN
 {
+public:
 	int *linkVNs;
 	int *linkVNs_GF;
 	int weight;
 	float **L_c2v; //校验节点传给变量节点的值，[连接的节点的序号][各GF对应的LLR]
-} CN;
-typedef struct
+};
+class AWGNChannel
 {
+public:
 	int seed[3]; // 噪声种子
 	float sigma;
-} AWGNChannel;
+};
 
-typedef struct
+class Simulation
 {
+public:
 	float SNR; // 当前仿真的SNR
 	double sumTime;
 
@@ -61,7 +69,11 @@ typedef struct
 	float AverageIT; // =Total_Iteration/num_Frames
 	float FER_False; // =num_False_Frames/num_Frames
 	float FER_Alarm; // =num_Alarm_Frames/num_Frames
+};
 
-} Simulation;
+void copyVN(const LDPCCode *H, VN *B, const VN *A);
+void freeVN(const LDPCCode *H, VN *A);
+void copyCN(const LDPCCode *H, CN *B, const CN *A);
+void freeCN(const LDPCCode *H, CN *A);
 
 #endif

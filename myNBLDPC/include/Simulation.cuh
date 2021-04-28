@@ -5,13 +5,13 @@
 #include "struct.cuh"
 #include "GF.cuh"
 
-void Simulation_CPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *CONSTELLATION, VN *Variablenode, CN *Checknode, CComplex *CComplex_sym, int *CodeWord_sym, int *DecodeOutput);
+void Simulation_CPU(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, const CComplex *CONSTELLATION, VN *Variablenode, CN *Checknode, const CComplex *CComplex_sym, const int *CodeWord_sym);
 
-void Simulation_GPU(LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, CComplex *CONSTELLATION, VN *Variablenode, CN *Checknode, CComplex *CComplex_sym, int *CodeWord_sym, int *DecodeOutput, unsigned *TableMultiply_GPU, unsigned *TableAdd_GPU, int *Checknode_weight, int *Variablenode_linkCNs, int *Checknode_linkVNs, int *Checknode_linkVNs_GF);
+void Simulation_GPU(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, const CComplex *CONSTELLATION, VN *Variablenode, CN *Checknode, const CComplex *CComplex_sym, int *CodeWord_sym, const unsigned *TableMultiply_GPU, const unsigned *TableAdd_GPU, const int *Checknode_weight, const int *Variablenode_linkCNs, const int *Checknode_linkVNs, const int *Checknode_linkVNs_GF);
 
 void WriteLogo(AWGNChannel *AWGN, Simulation *SIM);
 
-int Statistic(Simulation *SIM, int *CodeWord_Frames, int *D, LDPCCode *LDPC);
+int Statistic(Simulation *SIM, const int *CodeWord_Frames, int *D, const LDPCCode *LDPC);
 
 CComplex *Get_CONSTELLATION(LDPCCode *H);
 

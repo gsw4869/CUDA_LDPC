@@ -6,9 +6,9 @@
 
 void BitToSym(LDPCCode *H, int *CodeWord_sym, int *CodeWord_bit);
 
-void Modulate(LDPCCode *H, CComplex *CONSTELLATION, CComplex *CComplex_sym, int *CodeWord_sym);
+void Modulate(const LDPCCode *H, CComplex *CONSTELLATION, CComplex *CComplex_sym, int *CodeWord_sym);
 
-void AWGNChannel_CPU(LDPCCode *H, AWGNChannel *AWGN, CComplex *CComplex_sym_Channelout, CComplex *CComplex_sym);
+void AWGNChannel_CPU(const LDPCCode *H, AWGNChannel *AWGN, CComplex *CComplex_sym_Channelout, const CComplex *CComplex_sym);
 
 float RandomModule(int *seed);
 

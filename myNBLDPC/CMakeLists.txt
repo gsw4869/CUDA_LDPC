@@ -3,7 +3,7 @@ project(cuda-ldpc)
 include(CheckLanguage)
 include(CTest)
 
-set(SOURCES src/main.cu src/LDPC_Decoder.cu src/LDPC_Encoder.cu src/Simulation.cu src/GF.cu src/Decode_GPU.cu)
+set(SOURCES src/main.cu src/LDPC_Decoder.cu src/LDPC_Encoder.cu src/Simulation.cu src/GF.cu src/Decode_GPU.cu src/struct.cu)
 
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -17,6 +17,8 @@ if(CMAKE_CUDA_COMPILER)
 else()
   message(STATUS "No CUDA detected. GPU wont be used.")
 endif()
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 # pthread conflict with OPENMP
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
