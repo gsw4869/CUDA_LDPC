@@ -69,7 +69,7 @@ void decode_once_cpu(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, cons
 	free(CComplex_sym_Channelout);
 }
 
-void decode_once_gpu(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, const CComplex *CONSTELLATION, VN *Variablenode_0, CN *Checknode_0, const CComplex *CComplex_sym, const int *CodeWord_sym, const unsigned *TableMultiply_GPU, const unsigned *TableAdd_GPU, const int *Checknode_weight, const int *Variablenode_linkCNs, const int *Checknode_linkVNs, const int *Checknode_linkVNs_GF, int thread_id)
+void decode_once_gpu(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, const CComplex *CONSTELLATION, VN *Variablenode_0, CN *Checknode_0, const CComplex *CComplex_sym, const int *CodeWord_sym, const unsigned *TableMultiply_GPU, const unsigned *TableAdd_GPU, const int *Variablenode_weight, const int *Checknode_weight, const int *Variablenode_linkCNs, const int *Checknode_linkVNs, const int *Checknode_linkVNs_GF, int thread_id)
 {
 
 	int iter_number = 0;
@@ -108,7 +108,7 @@ void decode_once_gpu(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, cons
 
 		start = std::chrono::steady_clock::now();
 
-		Decoding_EMS_GPU(H, Variablenode, Checknode, 1, maxdc - 1, DecodeOutput, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, iter_number);
+		Decoding_EMS_GPU(H, Variablenode, Checknode, 3, maxdc - 1, DecodeOutput, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Variablenode_weight, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, iter_number);
 
 		end = std::chrono::steady_clock::now();
 
@@ -179,7 +179,7 @@ void Simulation_CPU(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, const
 * AWGN:AWGNChannel类变量，包含噪声种子等
 * 
 */
-void Simulation_GPU(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, const CComplex *CONSTELLATION, VN *Variablenode, CN *Checknode, const CComplex *CComplex_sym, int *CodeWord_sym, const unsigned *TableMultiply_GPU, const unsigned *TableAdd_GPU, const int *Checknode_weight, const int *Variablenode_linkCNs, const int *Checknode_linkVNs, const int *Checknode_linkVNs_GF)
+void Simulation_GPU(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, const CComplex *CONSTELLATION, VN *Variablenode, CN *Checknode, const CComplex *CComplex_sym, int *CodeWord_sym, const unsigned *TableMultiply_GPU, const unsigned *TableAdd_GPU, const int *Variablenode_weight, const int *Checknode_weight, const int *Variablenode_linkCNs, const int *Checknode_linkVNs, const int *Checknode_linkVNs_GF)
 {
 	int threadNum =
 		THREAD_NUM ? THREAD_NUM : std::thread::hardware_concurrency();
@@ -187,7 +187,7 @@ void Simulation_GPU(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, const
 	for (int i = 0; i < threadNum; i++)
 	{
 		threads_[i] = std::thread(
-			decode_once_gpu, (const LDPCCode *)H, AWGN, SIM, (const CComplex *)CONSTELLATION, Variablenode, Checknode, (const CComplex *)CComplex_sym, (const int *)CodeWord_sym, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, i);
+			decode_once_gpu, (const LDPCCode *)H, AWGN, SIM, (const CComplex *)CONSTELLATION, Variablenode, Checknode, (const CComplex *)CComplex_sym, (const int *)CodeWord_sym, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Variablenode_weight, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, i);
 	}
 	for (int i = 0; i < threadNum; i++)
 	{

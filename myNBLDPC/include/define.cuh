@@ -16,13 +16,14 @@
 
 // LDPC_N96_K48_GF256_d1_exp
 // Tanner_74_9_Z128_GF16
+// BDS.576.288.GF.64
 
-#define Matrixfile "Tanner_74_9_Z128_GF16.txt"
+#define Matrixfile "BDS.576.288.GF.64.txt"
 #define Constellationfile "./Constellation/BPSK.txt"
 #define n_QAM 2
-#define GFQ 16
-#define maxdc 21
-#define maxdv 3
+#define GFQ 64
+#define maxdc 4
+#define maxdv 2
 #define THREAD_NUM 0
 
 /*LDPC译码器相关参数*/

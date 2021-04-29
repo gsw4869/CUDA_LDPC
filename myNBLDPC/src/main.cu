@@ -115,6 +115,22 @@ int main()
 	}
 	free(Checknode_weight_temp);
 
+	int *Variablenode_weight;
+	cudaMalloc((void **)&Variablenode_weight, H->Variablenode_num * sizeof(int));
+
+	int *Variablenode_weight_temp = (int *)malloc(H->Variablenode_num * sizeof(int));
+	for (int i = 0; i < H->Variablenode_num; i++)
+	{
+		Variablenode_weight_temp[i] = Variablenode[i].weight;
+	}
+	cudaStatus = cudaMemcpy(Variablenode_weight, Variablenode_weight_temp, H->Variablenode_num * sizeof(int), cudaMemcpyHostToDevice);
+	if (cudaStatus != cudaSuccess)
+	{
+		printf("Cannot copy Variablenode_weight\n");
+		exit(0);
+	}
+	free(Variablenode_weight_temp);
+
 	int *Variablenode_linkCNs;
 	cudaMalloc((void **)&Variablenode_linkCNs, H->Variablenode_num * maxdv * sizeof(int));
 
@@ -123,7 +139,7 @@ int main()
 	{
 		for (int j = 0; j < Variablenode[i].weight; j++)
 		{
-			Variablenode_linkCNs_temp[i * maxdv + j] = Variablenode[i].linkCNs[j];
+			Variablenode_linkCNs_temp[i * maxdv + j] = Variablenode[i].linkCNs[j] * GFQ * maxdc + index_in_CN(Variablenode, i, j, Checknode) * GFQ; //直接给到数组里的序号
 		}
 	}
 	cudaStatus = cudaMemcpy(Variablenode_linkCNs, Variablenode_linkCNs_temp, H->Variablenode_num * maxdv * sizeof(int), cudaMemcpyHostToDevice);
@@ -225,7 +241,7 @@ int main()
 		SIM->FER_Alarm = 0;
 
 		// Simulation_CPU((const LDPCCode *)H, AWGN, SIM, (const CComplex *)CONSTELLATION, Variablenode, Checknode, (const CComplex *)CComplex_sym, (const int *)CodeWord_sym);
-		Simulation_GPU((const LDPCCode *)H, AWGN, SIM, (const CComplex *)CONSTELLATION, Variablenode, Checknode, (const CComplex *)CComplex_sym, CodeWord_sym, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF);
+		Simulation_GPU((const LDPCCode *)H, AWGN, SIM, (const CComplex *)CONSTELLATION, Variablenode, Checknode, (const CComplex *)CComplex_sym, CodeWord_sym, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Variablenode_weight, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF);
 	}
 	cudaFree(TableMultiply_GPU);
 	cudaFree(TableAdd_GPU);

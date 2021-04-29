@@ -7,7 +7,7 @@
 
 void Simulation_CPU(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, const CComplex *CONSTELLATION, VN *Variablenode, CN *Checknode, const CComplex *CComplex_sym, const int *CodeWord_sym);
 
-void Simulation_GPU(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, const CComplex *CONSTELLATION, VN *Variablenode, CN *Checknode, const CComplex *CComplex_sym, int *CodeWord_sym, const unsigned *TableMultiply_GPU, const unsigned *TableAdd_GPU, const int *Checknode_weight, const int *Variablenode_linkCNs, const int *Checknode_linkVNs, const int *Checknode_linkVNs_GF);
+void Simulation_GPU(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, const CComplex *CONSTELLATION, VN *Variablenode, CN *Checknode, const CComplex *CComplex_sym, int *CodeWord_sym, const unsigned *TableMultiply_GPU, const unsigned *TableAdd_GPU, const int *Variablenode_weight, const int *Checknode_weight, const int *Variablenode_linkCNs, const int *Checknode_linkVNs, const int *Checknode_linkVNs_GF);
 
 void WriteLogo(AWGNChannel *AWGN, Simulation *SIM);
 

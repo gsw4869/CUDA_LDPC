@@ -25,24 +25,9 @@ __device__ int GFInverse_GPU(int ele, const unsigned *TableInverse_GPU)
     return TableInverse_GPU[ele];
 }
 
-int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, const unsigned *TableMultiply_GPU, const unsigned *TableAdd_GPU, const int *Checknode_weight, const int *Variablenode_linkCNs, const int *Checknode_linkVNs, const int *Checknode_linkVNs_GF, int &iter_number)
+int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, const unsigned *TableMultiply_GPU, const unsigned *TableAdd_GPU, const int *Variablenode_weight, const int *Checknode_weight, const int *Variablenode_linkCNs, const int *Checknode_linkVNs, const int *Checknode_linkVNs_GF, int &iter_number)
 {
-
-    for (int col = 0; col < H->Variablenode_num; col++)
-    {
-        for (int d = 0; d < Variablenode[col].weight; d++)
-        {
-            memcpy(Variablenode[col].sort_L_v2c[d], Variablenode[col].L_ch, (GFQ - 1) * sizeof(float));
-        }
-    }
-
-    for (int row = 0; row < H->Checknode_num; row++)
-    {
-        for (int d = 0; d < Checknode[row].weight; d++)
-        {
-            memset(Checknode[row].L_c2v[d], 0, (GFQ - 1) * sizeof(float));
-        }
-    }
+    cudaError_t cudaStatus;
     int *sort_Entr_v2c_temp = (int *)malloc(H->Variablenode_num * maxdv * GFQ * sizeof(int));
     memset(sort_Entr_v2c_temp, 0, H->Variablenode_num * maxdv * GFQ * sizeof(int));
     int *sort_Entr_v2c;
@@ -55,29 +40,87 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
 
     float *Checknode_L_c2v_temp = (float *)malloc(H->Checknode_num * maxdc * GFQ * sizeof(float));
     memset(Checknode_L_c2v_temp, 0, H->Checknode_num * maxdc * GFQ * sizeof(float));
+
     float *Checknode_L_c2v;
     cudaMalloc((void **)&Checknode_L_c2v, H->Checknode_num * maxdc * GFQ * sizeof(float));
 
     int *index = (int *)malloc((GFQ) * sizeof(int));
 
+    float *L_ch_temp = (float *)malloc(H->Variablenode_num * (GFQ - 1) * sizeof(float));
+    memset(L_ch_temp, 0, H->Variablenode_num * (GFQ - 1) * sizeof(float));
+
+    float *L_ch;
+    cudaMalloc((void **)&L_ch, H->Variablenode_num * (GFQ - 1) * sizeof(float));
+
+    float *LLR_temp = (float *)malloc(H->Variablenode_num * (GFQ - 1) * sizeof(float));
+    float *LLR;
+    cudaMalloc((void **)&LLR, H->Variablenode_num * (GFQ - 1) * sizeof(float));
+
+    for (int col = 0; col < H->Variablenode_num; col++)
+    {
+        for (int d = 0; d < Variablenode[col].weight; d++)
+        {
+            Variablenode[col].L_ch[GFQ - 1] = 0;
+            for (int q = 0; q < GFQ - 1; q++)
+            {
+                sort_L_v2c_temp[col * maxdv * GFQ + d * GFQ + q] = Variablenode[col].L_ch[q];
+                Variablenode[col].sort_L_v2c[d][q] = Variablenode[col].L_ch[q];
+            }
+        }
+        for (int q = 0; q < GFQ - 1; q++)
+        {
+            L_ch_temp[col * (GFQ - 1) + q] = Variablenode[col].L_ch[q];
+        }
+    }
+    cudaStatus = cudaMemcpy(L_ch, L_ch_temp, H->Variablenode_num * (GFQ - 1) * sizeof(float), cudaMemcpyHostToDevice);
+    if (cudaStatus != cudaSuccess)
+    {
+        printf("Cannot copy L_ch\n");
+        exit(0);
+    }
+
+    cudaStatus = cudaMemcpy(sort_L_v2c, sort_L_v2c_temp, H->Variablenode_num * maxdv * GFQ * sizeof(float), cudaMemcpyHostToDevice);
+    if (cudaStatus != cudaSuccess)
+    {
+        printf("Cannot copy sort_L_v2c\n");
+        exit(0);
+    }
+
+    cudaStatus = cudaMemcpy(Checknode_L_c2v, Checknode_L_c2v_temp, H->Checknode_num * maxdc * GFQ * sizeof(float), cudaMemcpyHostToDevice);
+    if (cudaStatus != cudaSuccess)
+    {
+        printf("Cannot copy Checknode_L_c2v\n");
+        exit(0);
+    }
+
+    for (int row = 0; row < H->Checknode_num; row++)
+    {
+        for (int d = 0; d < Checknode[row].weight; d++)
+        {
+            memset(Checknode[row].L_c2v[d], 0, (GFQ - 1) * sizeof(float));
+        }
+    }
+
     iter_number = 0;
     bool decode_correct = true;
     while (iter_number++ < maxIT - 1)
     {
-        for (int col = 0; col < H->Variablenode_num; col++)
+
+        Variablenode_EMS<<<((H->Variablenode_num % 128) ? (H->Variablenode_num / 128 + 1) : (H->Variablenode_num / 128)), 128>>>((const int *)Variablenode_weight, (const int *)Variablenode_linkCNs, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, (const float *)L_ch, LLR, H->Variablenode_num);
+
+        cudaStatus = cudaMemcpy(LLR_temp, LLR, H->Variablenode_num * (GFQ - 1) * sizeof(float), cudaMemcpyDeviceToHost);
+        if (cudaStatus != cudaSuccess)
         {
-            memcpy(Variablenode[col].LLR, Variablenode[col].L_ch, (GFQ - 1) * sizeof(float));
+            printf("Cannot copy LLR\n");
+            exit(0);
         }
-        for (int col = 0; col < H->Variablenode_num; col++)
+        for (int i = 0; i < H->Variablenode_num; i++)
         {
-            for (int d = 0; d < Variablenode[col].weight; d++)
+            for (int q = 0; q < GFQ - 1; q++)
             {
-                for (int q = 0; q < GFQ - 1; q++)
-                {
-                    Variablenode[col].LLR[q] += Checknode[Variablenode[col].linkCNs[d]].L_c2v[index_in_CN(Variablenode, col, d, Checknode)][q];
-                }
+                Variablenode[i].LLR[q] = LLR_temp[i * (GFQ - 1) + q];
             }
-            DecodeOutput[col] = DecideLLRVector(Variablenode[col].LLR, GFQ);
+            DecodeOutput[i] = DecideLLRVector(Variablenode[i].LLR, GFQ);
         }
 
         decode_correct = true;
@@ -94,18 +137,22 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
                 break;
             }
         }
+
         if (decode_correct)
         {
             cudaFree(sort_Entr_v2c);
             cudaFree(sort_L_v2c);
             cudaFree(Checknode_L_c2v);
+            cudaFree(LLR);
+            cudaFree(L_ch);
+            free(L_ch_temp);
+            free(LLR_temp);
             free(index);
             free(sort_Entr_v2c_temp);
             free(sort_L_v2c_temp);
             free(Checknode_L_c2v_temp);
             return 1;
         }
-
         // message from var to check
         for (int col = 0; col < H->Variablenode_num; col++)
         {
@@ -138,7 +185,6 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
                 }
             }
         }
-        cudaError_t cudaStatus;
         cudaStatus = cudaMemcpy(sort_Entr_v2c, sort_Entr_v2c_temp, H->Variablenode_num * maxdv * GFQ * sizeof(int), cudaMemcpyHostToDevice);
         if (cudaStatus != cudaSuccess)
         {
@@ -153,13 +199,13 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
         }
         // // message from check to var
 
-        Checknode_EMS<<<((H->Checknode_num % 128) ? (H->Checknode_num / 128 + 1) : (H->Checknode_num / 128)), 128>>>((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, EMS_Nm, EMS_Nc, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, H->Checknode_num);
+        Checknode_EMS<<<((H->Checknode_num % 128) ? (H->Checknode_num / 128 + 1) : (H->Checknode_num / 128)), 128>>>((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, EMS_Nm, EMS_Nc, (const int *)Checknode_weight, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, H->Checknode_num);
         // Checknode_EMS<<<1, 1>>>((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, EMS_Nm, EMS_Nc, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, H->Checknode_num);
 
         cudaStatus = cudaMemcpy(Checknode_L_c2v_temp, Checknode_L_c2v, H->Checknode_num * maxdc * GFQ * sizeof(float), cudaMemcpyDeviceToHost);
         if (cudaStatus != cudaSuccess)
         {
-            printf("Cannot copy Checknode_L_c2v\n");
+            printf("Cannot copy Checknode_L_c2v D2V\n");
             exit(0);
         }
 
@@ -177,11 +223,36 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
     cudaFree(sort_Entr_v2c);
     cudaFree(sort_L_v2c);
     cudaFree(Checknode_L_c2v);
+    cudaFree(LLR);
+    cudaFree(L_ch);
+    free(L_ch_temp);
+    free(LLR_temp);
     free(index);
     free(sort_Entr_v2c_temp);
     free(sort_L_v2c_temp);
     free(Checknode_L_c2v_temp);
     return 0;
+}
+
+__global__ void Variablenode_EMS(const int *Variablenode_weight, const int *Variablenode_linkCNs, int *sort_Entr_v2c, float *sort_L_v2c, float *Checknode_L_c2v, const float *L_ch, float *LLR, int Variablenode_num)
+{
+
+    int offset;
+    offset = threadIdx.x + blockDim.x * blockIdx.x;
+    if (offset < Variablenode_num)
+    {
+        for (int q = 0; q < GFQ - 1; q++)
+        {
+            LLR[offset * (GFQ - 1) + q] = L_ch[offset * (GFQ - 1) + q];
+        }
+        for (int d = 0; d < Variablenode_weight[offset]; d++)
+        {
+            for (int q = 0; q < GFQ - 1; q++)
+            {
+                LLR[offset * (GFQ - 1) + q] += Checknode_L_c2v[Variablenode_linkCNs[offset * maxdv + d] + q];
+            }
+        }
+    }
 }
 
 /*
@@ -194,7 +265,7 @@ sort_Entr_v2c:每个变量节点重量dv，q,q,q一共dv个，然后再乘以变
 sort_L_v2c:和sort_Entr_v2c对应的LLR
 Checknode_L_c2v:每个校验节点重量dc，q一共dc个，然后再乘以变量节点个数[校验节点个数][校验节点重量][q]
 */
-__global__ void Checknode_EMS(const unsigned *TableMultiply_GPU, const unsigned *TableAdd_GPU, int EMS_Nm, int EMS_Nc, const int *Checknode_weight, const int *Variblenode_linkCNs, const int *Checknode_linkVNs, const int *Checknode_linkVNs_GF, int *sort_Entr_v2c, float *sort_L_v2c, float *Checknode_L_c2v, int Checknode_num)
+__global__ void Checknode_EMS(const unsigned *TableMultiply_GPU, const unsigned *TableAdd_GPU, int EMS_Nm, int EMS_Nc, const int *Checknode_weight, const int *Checknode_linkVNs, const int *Checknode_linkVNs_GF, int *sort_Entr_v2c, float *sort_L_v2c, float *Checknode_L_c2v, int Checknode_num)
 {
     int offset;
     offset = threadIdx.x + blockDim.x * blockIdx.x;
