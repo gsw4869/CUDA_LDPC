@@ -17,13 +17,15 @@
 // LDPC_N96_K48_GF256_d1_exp
 // Tanner_74_9_Z128_GF16
 // BDS.576.288.GF.64
+// LDPC_N576_K480_GF256_exp
+// LDPC_N576_K288_GF64_d1_exp
 
-#define Matrixfile "Tanner_74_9_Z128_GF16.txt"
+#define Matrixfile "LDPC_N576_K480_GF256_exp.txt"
 #define Constellationfile "./Constellation/BPSK.txt"
 #define n_QAM 2
-#define GFQ 16
-#define maxdc 21
-#define maxdv 3
+#define GFQ 256
+#define maxdc 12
+#define maxdv 2
 #define THREAD_NUM 0
 
 /*LDPC译码器相关参数*/
@@ -42,11 +44,11 @@
 /*仿真参数*/
 #define startSNR 0
 #define stepSNR 1
-#define stopSNR 20
+#define stopSNR 10
 
 #define leastErrorFrames 50 // 最少错误帧数
 #define leastTestFrames 10  // 最少仿真帧数
-#define displayStep 10000   // 定义将译码结果写入相应txt文件的频率
+#define displayStep 1000    // 定义将译码结果写入相应txt文件的频率
 
 /*CUDA c相应参数*/
 #define MaxThreadPerBlock 1024 // 针对GeForce GTX 1050而言.
