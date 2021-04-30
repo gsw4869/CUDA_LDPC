@@ -171,6 +171,7 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
             free(sort_Entr_v2c_temp);
             free(sort_L_v2c_temp);
             free(Checknode_L_c2v_temp);
+            iter_number--;
             return 1;
         }
         // message from var to check

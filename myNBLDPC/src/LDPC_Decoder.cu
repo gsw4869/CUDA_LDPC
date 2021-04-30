@@ -192,6 +192,7 @@ int Decoding_EMS(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm,
 		{
 			free(EMS_L_c2v);
 			free(index);
+			iter_number--;
 			return 1;
 		}
 

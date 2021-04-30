@@ -239,9 +239,14 @@ int main()
 		SIM->AverageIT = 0;
 		SIM->FER_False = 0;
 		SIM->FER_Alarm = 0;
-
-		// Simulation_CPU((const LDPCCode *)H, AWGN, SIM, (const CComplex *)CONSTELLATION, Variablenode, Checknode, (const CComplex *)CComplex_sym, (const int *)CodeWord_sym);
-		Simulation_GPU((const LDPCCode *)H, AWGN, SIM, (const CComplex *)CONSTELLATION, Variablenode, Checknode, (const CComplex *)CComplex_sym, CodeWord_sym, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Variablenode_weight, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF);
+		if (!CPU_GPU)
+		{
+			Simulation_CPU((const LDPCCode *)H, AWGN, SIM, (const CComplex *)CONSTELLATION, Variablenode, Checknode, (const CComplex *)CComplex_sym, (const int *)CodeWord_sym);
+		}
+		else
+		{
+			Simulation_GPU((const LDPCCode *)H, AWGN, SIM, (const CComplex *)CONSTELLATION, Variablenode, Checknode, (const CComplex *)CComplex_sym, CodeWord_sym, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Variablenode_weight, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF);
+		}
 	}
 	cudaFree(TableMultiply_GPU);
 	cudaFree(TableAdd_GPU);
