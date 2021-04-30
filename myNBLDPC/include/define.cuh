@@ -20,12 +20,12 @@
 // LDPC_N576_K480_GF256_exp
 // LDPC_N576_K288_GF64_d1_exp
 
-#define Matrixfile "LDPC_N576_K480_GF256_exp.txt"
+#define Matrixfile "Tanner_74_9_Z128_GF16.txt"
 #define Constellationfile "./Constellation/BPSK.txt"
 #define n_QAM 2
-#define GFQ 256
-#define maxdc 12
-#define maxdv 2
+#define GFQ 16
+#define maxdc 21
+#define maxdv 3
 #define THREAD_NUM 0
 
 /*LDPC译码器相关参数*/

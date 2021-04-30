@@ -6,6 +6,26 @@
 #include <sstream>
 #include <assert.h>
 
+__device__ int GetCombCount(int n, int m)
+{
+    int i;
+    int a, b, c, s; // s = a/(b*c)
+    a = b = c = 1;
+    for (i = 1; i <= n; i++)
+        a *= i;
+    for (i = 1; i <= m; i++)
+        b *= i;
+    for (i = 1; i <= n - m; i++)
+        c *= i;
+    s = a / (b * c);
+    return s;
+}
+__device__ void swap(int &a, int &b)
+{
+    int temp = a;
+    a = b;
+    b = temp;
+}
 __device__ int GFAdd_GPU(int ele1, int ele2, const unsigned *TableAdd_GPU)
 {
     return ele1 ^ ele2;
@@ -334,56 +354,174 @@ __global__ void Checknode_EMS(const unsigned *TableMultiply_GPU, const unsigned 
                 // sumNonLLR = 0;
                 // diff = 0;
                 // ConstructConf_GPU((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, EMS_Nm, EMS_Nc, sumNonele, sumNonLLR, diff, 0, dc, Checknode_weight[offset] - 1, offset, EMS_L_c2v, (const int *)Variblenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c);
-
-                int *conf_index = (int *)malloc((Checknode_weight[offset] - 1) * sizeof(int));
-                memset(conf_index, 0, (Checknode_weight[offset] - 1) * sizeof(int));
-
-                int flag = 0;
-
-                while (!flag)
+                int *bit = new int[Checknode_weight[offset] - 1];
+                for (int choose_n = 2; choose_n <= EMS_Nc; choose_n++)
                 {
-                    sumNonele = 0;
-                    sumNonLLR = 0;
-                    for (int i = 0; i < Checknode_weight[offset] - 1; i++)
-                    {
-                        conf_index[i] += 1; // move confset[i] to smaller one
 
-                        if (i == Checknode_weight[offset] - 2 && conf_index[i] == EMS_Nm)
-                        { // reaches end
-                            flag = 1;
-                            break;
-                        }
-                        else if (conf_index[i] >= EMS_Nm)
-                        {
-                            conf_index[i] = 0;
-                            // continue to modify next VN
-                        }
+                    for (int k = 0; k < Checknode_weight[offset] - 1; k++)
+                    {
+                        if (k < choose_n)
+                            bit[k] = 1;
                         else
-                        {
-                            break; // don't modify next VN
-                        }
+                            bit[k] = 0;
                     }
-                    if (!flag)
-                    {
-                        int k = 0;
-                        for (int i = 0; i < Checknode_weight[offset]; i++)
-                        {
-                            if (i == dc)
-                            {
-                                continue;
-                            }
 
-                            sumNonele = GFAdd_GPU(GFMultiply_GPU(sort_Entr_v2c[Checknode_linkVNs[offset * maxdc + i] + conf_index[k]], Checknode_linkVNs_GF[offset * maxdc + i], TableMultiply_GPU), sumNonele, TableAdd_GPU);
-                            sumNonLLR = sumNonLLR + sort_L_v2c[Checknode_linkVNs[offset * maxdc + i] + conf_index[k]];
-                            k++;
-                        }
-                        if (sumNonLLR > EMS_L_c2v[sumNonele])
+                    int i, j, beg, end;
+                    int len = Checknode_weight[offset] - 1;
+                    int N = GetCombCount(Checknode_weight[offset] - 1, choose_n); //C(n,count)  C(5,3)
+
+                    int *conf_index = (int *)malloc(choose_n * sizeof(int));
+                    memset(conf_index, 0, (choose_n) * sizeof(int));
+
+                    int flag = 0;
+
+                    while (!flag)
+                    {
+                        sumNonele = 0;
+                        sumNonLLR = 0;
+                        for (int i = 0; i < choose_n; i++)
                         {
-                            EMS_L_c2v[sumNonele] = sumNonLLR;
+                            conf_index[i] += 1; // move confset[i] to smaller one
+
+                            if (i == choose_n - 1 && conf_index[i] == EMS_Nm)
+                            { // reaches end
+                                flag = 1;
+                                break;
+                            }
+                            else if (conf_index[i] >= EMS_Nm)
+                            {
+                                conf_index[i] = 0;
+                                // continue to modify next VN
+                            }
+                            else
+                            {
+                                break; // don't modify next VN
+                            }
+                        }
+                        if (!flag)
+                        {
+                            int k = 0;
+                            int t = 0;
+                            for (int i = 0; i < Checknode_weight[offset]; i++)
+                            {
+                                if (i == dc)
+                                {
+                                    continue;
+                                }
+                                if (bit[t] == 1)
+                                {
+                                    sumNonele = GFAdd_GPU(GFMultiply_GPU(sort_Entr_v2c[Checknode_linkVNs[offset * maxdc + i] + conf_index[k]], Checknode_linkVNs_GF[offset * maxdc + i], TableMultiply_GPU), sumNonele, TableAdd_GPU);
+                                    sumNonLLR = sumNonLLR + sort_L_v2c[Checknode_linkVNs[offset * maxdc + i] + conf_index[k]];
+                                    k++;
+                                }
+                                else
+                                {
+                                    sumNonele = GFAdd_GPU(GFMultiply_GPU(sort_Entr_v2c[Checknode_linkVNs[offset * maxdc + i]], Checknode_linkVNs_GF[offset * maxdc + i], TableMultiply_GPU), sumNonele, TableAdd_GPU);
+                                    sumNonLLR = sumNonLLR + sort_L_v2c[Checknode_linkVNs[offset * maxdc + i]];
+                                }
+                                t++;
+                            }
+                            if (sumNonLLR > EMS_L_c2v[sumNonele])
+                            {
+                                EMS_L_c2v[sumNonele] = sumNonLLR;
+                            }
                         }
                     }
+                    for (j = 1; j < N; j++)
+                    {
+                        for (i = len - 1; i > 0; i--)
+                        {
+                            if (bit[i] == 0 && bit[i - 1] == 1)
+                            {
+                                swap(bit[i], bit[i - 1]);
+
+                                //from index: [i to len-1] , make all bit 1 in the right
+                                beg = i;
+                                end = len - 1;
+                                while (1)
+                                {
+                                    while (bit[beg] == 1)
+                                    {
+                                        beg++;
+                                        if (beg >= len)
+                                            break;
+                                    }
+                                    while (bit[end] == 0)
+                                    {
+                                        end--;
+                                        if (end < i)
+                                            break;
+                                    }
+
+                                    if (beg < end)
+                                        swap(bit[beg], bit[end]);
+                                    else
+                                        break;
+
+                                } //end of "while"
+                                break;
+                            } //end of "if"
+                        }
+                        flag = 0;
+                        memset(conf_index, 0, (choose_n) * sizeof(int));
+
+                        while (!flag)
+                        {
+                            sumNonele = 0;
+                            sumNonLLR = 0;
+                            for (int i = 0; i < choose_n; i++)
+                            {
+                                conf_index[i] += 1; // move confset[i] to smaller one
+
+                                if (i == choose_n - 1 && conf_index[i] == EMS_Nm)
+                                { // reaches end
+                                    flag = 1;
+                                    break;
+                                }
+                                else if (conf_index[i] >= EMS_Nm)
+                                {
+                                    conf_index[i] = 0;
+                                    // continue to modify next VN
+                                }
+                                else
+                                {
+                                    break; // don't modify next VN
+                                }
+                            }
+                            if (!flag)
+                            {
+                                int k = 0;
+                                int t = 0;
+                                for (int i = 0; i < Checknode_weight[offset]; i++)
+                                {
+                                    if (i == dc)
+                                    {
+                                        continue;
+                                    }
+                                    if (bit[t] == 1)
+                                    {
+                                        sumNonele = GFAdd_GPU(GFMultiply_GPU(sort_Entr_v2c[Checknode_linkVNs[offset * maxdc + i] + conf_index[k]], Checknode_linkVNs_GF[offset * maxdc + i], TableMultiply_GPU), sumNonele, TableAdd_GPU);
+                                        sumNonLLR = sumNonLLR + sort_L_v2c[Checknode_linkVNs[offset * maxdc + i] + conf_index[k]];
+                                        k++;
+                                    }
+                                    else
+                                    {
+                                        sumNonele = GFAdd_GPU(GFMultiply_GPU(sort_Entr_v2c[Checknode_linkVNs[offset * maxdc + i]], Checknode_linkVNs_GF[offset * maxdc + i], TableMultiply_GPU), sumNonele, TableAdd_GPU);
+                                        sumNonLLR = sumNonLLR + sort_L_v2c[Checknode_linkVNs[offset * maxdc + i]];
+                                    }
+                                    t++;
+                                }
+                                if (sumNonLLR > EMS_L_c2v[sumNonele])
+                                {
+                                    EMS_L_c2v[sumNonele] = sumNonLLR;
+                                }
+                            }
+                        }
+                    }
+                    free(conf_index);
                 }
-                free(conf_index);
+
+                free(bit);
                 // calculate each c2v LLR
                 int v = 0;
                 Checknode_L_c2v[offset * maxdc * GFQ + dc * GFQ + GFQ - 1] = 0;
