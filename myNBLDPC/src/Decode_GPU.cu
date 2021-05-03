@@ -6,6 +6,32 @@
 #include <sstream>
 #include <assert.h>
 
+__device__ void BubleSort_GPU(float a[], int n, int index[])
+{
+    int i, j;
+    float x;
+    for (i = 0; i < n; i++)
+    {
+        for (j = 1; j < n - i; j++)
+        {
+            if (a[j - 1] < a[j])
+            {
+                x = a[j];
+                a[j] = a[j - 1];
+                a[j - 1] = x;
+                x = index[j];
+                index[j] = index[j - 1];
+                index[j - 1] = x;
+            }
+        }
+    }
+}
+
+__device__ int SortLLRVector_GPU(int GF, float *Entr_v2c, int *index)
+{
+    BubleSort_GPU(Entr_v2c, GF, index);
+    return 1;
+}
 __device__ int GetCombCount(int n, int m)
 {
     int i;
@@ -48,8 +74,8 @@ __device__ int GFInverse_GPU(int ele, const unsigned *TableInverse_GPU)
 int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, const unsigned *TableMultiply_GPU, const unsigned *TableAdd_GPU, const int *Variablenode_weight, const int *Checknode_weight, const int *Variablenode_linkCNs, const int *Checknode_linkVNs, const int *Checknode_linkVNs_GF, int &iter_number)
 {
     cudaError_t cudaStatus;
-    int *sort_Entr_v2c_temp = (int *)malloc(H->Variablenode_num * maxdv * GFQ * sizeof(int));
-    memset(sort_Entr_v2c_temp, 0, H->Variablenode_num * maxdv * GFQ * sizeof(int));
+    // int *sort_Entr_v2c_temp = (int *)malloc(H->Variablenode_num * maxdv * GFQ * sizeof(int));
+    // memset(sort_Entr_v2c_temp, 0, H->Variablenode_num * maxdv * GFQ * sizeof(int));
     int *sort_Entr_v2c;
     cudaMalloc((void **)&sort_Entr_v2c, H->Variablenode_num * maxdv * GFQ * sizeof(int));
 
@@ -64,7 +90,7 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
     float *Checknode_L_c2v;
     cudaMalloc((void **)&Checknode_L_c2v, H->Checknode_num * maxdc * GFQ * sizeof(float));
 
-    int *index = (int *)malloc((GFQ) * sizeof(int));
+    // int *index = (int *)malloc((GFQ) * sizeof(int));
 
     float *L_ch_temp = (float *)malloc(H->Variablenode_num * (GFQ - 1) * sizeof(float));
     memset(L_ch_temp, 0, H->Variablenode_num * (GFQ - 1) * sizeof(float));
@@ -167,79 +193,82 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
             cudaFree(L_ch);
             free(L_ch_temp);
             free(LLR_temp);
-            free(index);
-            free(sort_Entr_v2c_temp);
+            // free(index);
+            // free(sort_Entr_v2c_temp);
             free(sort_L_v2c_temp);
             free(Checknode_L_c2v_temp);
             iter_number--;
             return 1;
         }
         // message from var to check
-        for (int col = 0; col < H->Variablenode_num; col++)
-        {
-            for (int dv = 0; dv < Variablenode[col].weight; dv++)
-            {
-                for (int q = 0; q < GFQ - 1; q++)
-                {
-                    Variablenode[col].sort_L_v2c[dv][q] = Variablenode[col].LLR[q] - Checknode[Variablenode[col].linkCNs[dv]].L_c2v[index_in_CN(Variablenode, col, dv, Checknode)][q];
-                }
-                Variablenode[col].sort_L_v2c[dv][GFQ - 1] = 0;
-            }
-        }
+        // for (int col = 0; col < H->Variablenode_num; col++)
+        // {
+        //     for (int dv = 0; dv < Variablenode[col].weight; dv++)
+        //     {
+        //         for (int q = 0; q < GFQ - 1; q++)
+        //         {
+        //             Variablenode[col].sort_L_v2c[dv][q] = Variablenode[col].LLR[q] - Checknode[Variablenode[col].linkCNs[dv]].L_c2v[index_in_CN(Variablenode, col, dv, Checknode)][q];
+        //         }
+        //         Variablenode[col].sort_L_v2c[dv][GFQ - 1] = 0;
+        //     }
+        // }
 
-        for (int col = 0; col < H->Variablenode_num; col++)
-        {
-            for (int dv = 0; dv < Variablenode[col].weight; dv++)
-            {
-                for (int i = 0; i < GFQ - 1; i++)
-                {
-                    index[i] = i + 1;
-                }
-                index[GFQ - 1] = 0;
-                SortLLRVector(GFQ, Variablenode[col].sort_L_v2c[dv], index);
-                for (int i = 0; i < GFQ; i++)
-                {
-                    Variablenode[col].sort_Entr_v2c[dv][i] = index[i];
+        // for (int col = 0; col < H->Variablenode_num; col++)
+        // {
+        //     for (int dv = 0; dv < Variablenode[col].weight; dv++)
+        //     {
+        //         for (int i = 0; i < GFQ - 1; i++)
+        //         {
+        //             index[i] = i + 1;
+        //         }
+        //         index[GFQ - 1] = 0;
+        //         SortLLRVector(GFQ, Variablenode[col].sort_L_v2c[dv], index);
+        //         for (int i = 0; i < GFQ; i++)
+        //         {
+        //             Variablenode[col].sort_Entr_v2c[dv][i] = index[i];
 
-                    sort_Entr_v2c_temp[col * maxdv * GFQ + dv * GFQ + i] = index[i];
-                    sort_L_v2c_temp[col * maxdv * GFQ + dv * GFQ + i] = Variablenode[col].sort_L_v2c[dv][i];
-                }
-            }
-        }
-        cudaStatus = cudaMemcpy(sort_Entr_v2c, sort_Entr_v2c_temp, H->Variablenode_num * maxdv * GFQ * sizeof(int), cudaMemcpyHostToDevice);
-        if (cudaStatus != cudaSuccess)
-        {
-            printf("Cannot copy sort_Entr_v2c\n");
-            exit(0);
-        }
-        cudaStatus = cudaMemcpy(sort_L_v2c, sort_L_v2c_temp, H->Variablenode_num * maxdv * GFQ * sizeof(float), cudaMemcpyHostToDevice);
-        if (cudaStatus != cudaSuccess)
-        {
-            printf("Cannot copy sort_L_v2c\n");
-            exit(0);
-        }
+        //             sort_Entr_v2c_temp[col * maxdv * GFQ + dv * GFQ + i] = index[i];
+        //             sort_L_v2c_temp[col * maxdv * GFQ + dv * GFQ + i] = Variablenode[col].sort_L_v2c[dv][i];
+        //         }
+        //     }
+        // }
+
+        Variablenode_Update<<<((H->Variablenode_num % 128) ? (H->Variablenode_num / 128 + 1) : (H->Variablenode_num / 128)), 128>>>((const int *)Variablenode_weight, (const int *)Variablenode_linkCNs, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, (const float *)L_ch, LLR, H->Variablenode_num);
+
+        // cudaStatus = cudaMemcpy(sort_Entr_v2c, sort_Entr_v2c_temp, H->Variablenode_num * maxdv * GFQ * sizeof(int), cudaMemcpyHostToDevice);
+        // if (cudaStatus != cudaSuccess)
+        // {
+        //     printf("Cannot copy sort_Entr_v2c\n");
+        //     exit(0);
+        // }
+        // cudaStatus = cudaMemcpy(sort_L_v2c, sort_L_v2c_temp, H->Variablenode_num * maxdv * GFQ * sizeof(float), cudaMemcpyHostToDevice);
+        // if (cudaStatus != cudaSuccess)
+        // {
+        //     printf("Cannot copy sort_L_v2c\n");
+        //     exit(0);
+        // }
         // // message from check to var
 
         Checknode_EMS<<<((H->Checknode_num % 128) ? (H->Checknode_num / 128 + 1) : (H->Checknode_num / 128)), 128>>>((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, EMS_Nm, EMS_Nc, (const int *)Checknode_weight, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, H->Checknode_num);
         // Checknode_EMS<<<1, 1>>>((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, EMS_Nm, EMS_Nc, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, H->Checknode_num);
 
-        cudaStatus = cudaMemcpy(Checknode_L_c2v_temp, Checknode_L_c2v, H->Checknode_num * maxdc * GFQ * sizeof(float), cudaMemcpyDeviceToHost);
-        if (cudaStatus != cudaSuccess)
-        {
-            printf("Cannot copy Checknode_L_c2v D2V\n");
-            exit(0);
-        }
+        // cudaStatus = cudaMemcpy(Checknode_L_c2v_temp, Checknode_L_c2v, H->Checknode_num * maxdc * GFQ * sizeof(float), cudaMemcpyDeviceToHost);
+        // if (cudaStatus != cudaSuccess)
+        // {
+        //     printf("Cannot copy Checknode_L_c2v D2V\n");
+        //     exit(0);
+        // }
 
-        for (int i = 0; i < H->Checknode_num; i++)
-        {
-            for (int j = 0; j < Checknode[i].weight; j++)
-            {
-                for (int q = 0; q < GFQ - 1; q++)
-                {
-                    Checknode[i].L_c2v[j][q] = Checknode_L_c2v_temp[i * maxdc * GFQ + j * GFQ + q];
-                }
-            }
-        }
+        // for (int i = 0; i < H->Checknode_num; i++)
+        // {
+        //     for (int j = 0; j < Checknode[i].weight; j++)
+        //     {
+        //         for (int q = 0; q < GFQ - 1; q++)
+        //         {
+        //             Checknode[i].L_c2v[j][q] = Checknode_L_c2v_temp[i * maxdc * GFQ + j * GFQ + q];
+        //         }
+        //     }
+        // }
     }
     cudaFree(sort_Entr_v2c);
     cudaFree(sort_L_v2c);
@@ -248,8 +277,8 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
     cudaFree(L_ch);
     free(L_ch_temp);
     free(LLR_temp);
-    free(index);
-    free(sort_Entr_v2c_temp);
+    // free(index);
+    // free(sort_Entr_v2c_temp);
     free(sort_L_v2c_temp);
     free(Checknode_L_c2v_temp);
     return 0;
@@ -274,6 +303,43 @@ __global__ void Variablenode_EMS(const int *Variablenode_weight, const int *Vari
             }
         }
     }
+}
+
+__global__ void Variablenode_Update(const int *Variablenode_weight, const int *Variablenode_linkCNs, int *sort_Entr_v2c, float *sort_L_v2c, float *Checknode_L_c2v, const float *L_ch, float *LLR, int Variablenode_num)
+{
+
+    int offset;
+    offset = threadIdx.x + blockDim.x * blockIdx.x;
+    int *index = (int *)malloc(GFQ * sizeof(int));
+    if (offset < Variablenode_num)
+    {
+
+        for (int dv = 0; dv < Variablenode_weight[offset]; dv++)
+        {
+            for (int q = 0; q < GFQ - 1; q++)
+            {
+                sort_L_v2c[offset * maxdv * GFQ + dv * GFQ + q] = LLR[offset * (GFQ - 1) + q] - Checknode_L_c2v[Variablenode_linkCNs[offset * maxdv + dv] + q];
+            }
+            sort_L_v2c[offset * maxdv * GFQ + dv * GFQ + GFQ - 1] = 0;
+        }
+        for (int dv = 0; dv < Variablenode_weight[offset]; dv++)
+        {
+            for (int i = 0; i < GFQ - 1; i++)
+            {
+                index[i] = i + 1;
+            }
+            index[GFQ - 1] = 0;
+            SortLLRVector_GPU(GFQ, sort_L_v2c + offset * maxdv * GFQ + dv * GFQ, index);
+            for (int i = 0; i < GFQ; i++)
+            {
+                sort_Entr_v2c[offset * maxdv * GFQ + dv * GFQ + i] = index[i];
+
+                // sort_Entr_v2c_temp[col * maxdv * GFQ + dv * GFQ + i] = index[i];
+                // sort_L_v2c_temp[col * maxdv * GFQ + dv * GFQ + i] = Variablenode[col].sort_L_v2c[dv][i];
+            }
+        }
+    }
+    free(index);
 }
 
 /*
