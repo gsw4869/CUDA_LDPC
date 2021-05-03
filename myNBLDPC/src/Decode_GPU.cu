@@ -171,7 +171,7 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
     }
 
     iter_number = 0;
-    int decode_correct = 1;
+    bool decode_correct = true;
     int *DecodeOutput_GPU;
     cudaMalloc((void **)&DecodeOutput_GPU, H->Variablenode_num * sizeof(int));
 
@@ -195,7 +195,7 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
         //     DecodeOutput[i] = DecideLLRVector(Variablenode[i].LLR, GFQ);
         // }
 
-        decode_correct = 1;
+        decode_correct = true;
         int sum_temp = 0;
         for (int row = 0; row < H->Checknode_num; row++)
         {
