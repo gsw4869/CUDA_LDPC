@@ -51,7 +51,9 @@ void decode_once_cpu(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, cons
 
 		start = std::chrono::steady_clock::now();
 
-		Decoding_EMS(H, Variablenode, Checknode, EMS_NM, EMS_NC, DecodeOutput, iter_number);
+		// Decoding_EMS(H, Variablenode, Checknode, EMS_NM, EMS_NC, DecodeOutput, iter_number);
+
+		Decoding_Min_Max(H, Variablenode, Checknode, EMS_NM, EMS_NC, DecodeOutput, iter_number);
 
 		end = std::chrono::steady_clock::now();
 

@@ -62,7 +62,20 @@ int DecideLLRVector(float *LLR, int GF)
 		return alpha_i;
 	}
 }
-
+int d_DecideLLRVector(float *LLR)
+{
+	float min = DBL_MAX;
+	int alpha_i;
+	for (int q = 0; q < GFQ; q++)
+	{
+		if (LLR[q] < min)
+		{
+			min = LLR[q];
+			alpha_i = q;
+		}
+	}
+	return alpha_i;
+}
 int index_in_VN(CN *Checknode, int CNnum, int index_in_linkVNS, VN *Variablenode)
 {
 	for (int i = 0; i < Variablenode[Checknode[CNnum].linkVNs[index_in_linkVNS]].weight; i++)
@@ -304,6 +317,214 @@ int ConstructConf(CN *Checknode, VN *Variablenode, int Nm, int Nc, int &sumNonel
 			{
 				sumNonele = GFAdd(GFMultiply(Variablenode[Checknode[row].linkVNs[begin]].sort_Entr_v2c[index][k], Checknode[row].linkVNs_GF[begin]), sumNonele);
 				sumNonLLR = sumNonLLR - Variablenode[Checknode[row].linkVNs[begin]].sort_L_v2c[index][k];
+				diff -= (k != 0) ? 1 : 0;
+				break;
+			}
+		}
+	}
+	return 0;
+}
+
+int Decoding_Min_Max(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, int &iter_number)
+{
+	int min = DBL_MAX;
+	for (int col = 0; col < H->Variablenode_num; col++)
+	{
+		min = DBL_MAX;
+		for (int q = 0; q < GFQ; q++)
+		{
+			if (Variablenode[col].L_ch[q] < min)
+			{
+				min = Variablenode[col].L_ch[q];
+			}
+		}
+		for (int d = 0; d < Variablenode[col].weight; d++)
+		{
+			for (int q = 0; q < GFQ; q++)
+			{
+				Variablenode[col].sort_L_v2c[d][q] = Variablenode[col].L_ch[q] - min;
+			}
+		}
+	}
+	for (int row = 0; row < H->Checknode_num; row++)
+	{
+		for (int d = 0; d < Checknode[row].weight; d++)
+		{
+			for (int q = 0; q < GFQ - 1; q++)
+			{
+				Checknode[row].L_c2v[d][q] = 0;
+			}
+		}
+	}
+	float *EMS_L_c2v = (float *)malloc(GFQ * sizeof(float));
+	int *index = (int *)malloc((GFQ) * sizeof(int));
+
+	iter_number = 0;
+	bool decode_correct = true;
+	while (iter_number < maxIT)
+	{
+		iter_number++;
+		for (int col = 0; col < H->Variablenode_num; col++)
+		{
+			memcpy(Variablenode[col].LLR, Variablenode[col].L_ch, (GFQ - 1) * sizeof(float));
+		}
+		for (int col = 0; col < H->Variablenode_num; col++)
+		{
+			for (int d = 0; d < Variablenode[col].weight; d++)
+			{
+				for (int q = 0; q < GFQ - 1; q++)
+				{
+					Variablenode[col].LLR[q] += Checknode[Variablenode[col].linkCNs[d]].L_c2v[index_in_CN(Variablenode, col, d, Checknode)][q];
+				}
+			}
+			DecodeOutput[col] = DecideLLRVector(Variablenode[col].LLR, GFQ);
+		}
+
+		decode_correct = true;
+		int sum_temp = 0;
+		for (int row = 0; row < H->Checknode_num; row++)
+		{
+			for (int i = 0; i < Checknode[row].weight; i++)
+			{
+				sum_temp = GFAdd(sum_temp, GFMultiply(DecodeOutput[Checknode[row].linkVNs[i]], Checknode[row].linkVNs_GF[i]));
+			}
+			if (sum_temp)
+			{
+				decode_correct = false;
+				break;
+			}
+		}
+		if (decode_correct)
+		{
+			free(EMS_L_c2v);
+			free(index);
+			iter_number--;
+			return 1;
+		}
+
+		// message from var to check
+		for (int col = 0; col < H->Variablenode_num; col++)
+		{
+			for (int dv = 0; dv < Variablenode[col].weight; dv++)
+			{
+				for (int q = 0; q < GFQ - 1; q++)
+				{
+					Variablenode[col].sort_L_v2c[dv][q] = Variablenode[col].LLR[q] - Checknode[Variablenode[col].linkCNs[dv]].L_c2v[index_in_CN(Variablenode, col, dv, Checknode)][q];
+				}
+				Variablenode[col].sort_L_v2c[dv][GFQ - 1] = 0;
+			}
+		}
+
+		for (int col = 0; col < H->Variablenode_num; col++)
+		{
+
+			for (int dv = 0; dv < Variablenode[col].weight; dv++)
+			{
+				for (int i = 0; i < GFQ - 1; i++)
+				{
+					index[i] = i + 1;
+				}
+				index[GFQ - 1] = 0;
+				SortLLRVector(GFQ, Variablenode[col].sort_L_v2c[dv], index);
+				for (int i = 0; i < GFQ; i++)
+				{
+					Variablenode[col].sort_Entr_v2c[dv][i] = index[i];
+				}
+			}
+		}
+
+		// message from check to var
+		for (int row = 0; row < H->Checknode_num; row++)
+		{
+
+			for (int dc = 0; dc < Checknode[row].weight; dc++)
+			{
+				// reset the sum store vector to the munimum
+				for (int q = 0; q < GFQ; q++)
+				{
+					EMS_L_c2v[q] = -DBL_MAX;
+				}
+
+				// recursly exhaustly
+				int sumNonele, diff;
+				float sumNonLLR, lastsumNonLLR;
+				// conf(q, 1)
+				sumNonele = 0;
+				sumNonLLR = DBL_MAX;
+				lastsumNonLLR = DBL_MAX;
+				diff = 0;
+				ConstructConf_Min_Max(Checknode, Variablenode, GFQ, 1, sumNonele, sumNonLLR, lastsumNonLLR, diff, 0, dc, Checknode[row].weight - 1, row, EMS_L_c2v);
+
+				// conf(nm, nc)
+				sumNonele = 0;
+				sumNonLLR = DBL_MAX;
+				lastsumNonLLR = DBL_MAX;
+				diff = 0;
+				ConstructConf_Min_Max(Checknode, Variablenode, EMS_Nm, EMS_Nc, sumNonele, sumNonLLR, lastsumNonLLR, diff, 0, dc, Checknode[row].weight - 1, row, EMS_L_c2v);
+
+				// calculate each c2v LLR
+				int v = 0;
+				for (int k = 1; k < GFQ; k++)
+				{
+					v = GFMultiply(k, Checknode[row].linkVNs_GF[dc]);
+					Checknode[row].L_c2v[dc][k - 1] = (EMS_L_c2v[v] - EMS_L_c2v[0]) / 1.2;
+				}
+			}
+		}
+	}
+	free(EMS_L_c2v);
+	free(index);
+	return 0;
+}
+
+int ConstructConf_Min_Max(CN *Checknode, VN *Variablenode, int Nm, int Nc, int &sumNonele, float &sumNonLLR, float &lastsumNonLLR, int &diff, int begin, int except, int end, int row, float *EMS_L_c2v)
+{
+	int index;
+	if (begin > end)
+	{
+		if (sumNonLLR > EMS_L_c2v[sumNonele])
+		{
+			EMS_L_c2v[sumNonele] = sumNonLLR;
+		}
+	}
+	else if (begin == except)
+	{
+		ConstructConf_Min_Max(Checknode, Variablenode, Nm, Nc, sumNonele, sumNonLLR, lastsumNonLLR, diff, begin + 1, except, end, row, EMS_L_c2v);
+		return 0;
+	}
+	else
+	{
+		index = index_in_VN(Checknode, row, begin, Variablenode);
+		for (int k = 0; k < Nm; k++)
+		{
+			sumNonele = GFAdd(GFMultiply(Variablenode[Checknode[row].linkVNs[begin]].sort_Entr_v2c[index][k], Checknode[row].linkVNs_GF[begin]), sumNonele);
+			// sumNonLLR = sumNonLLR + Variablenode[Checknode[row].linkVNs[begin]].sort_L_v2c[index][k];
+			if (Variablenode[Checknode[row].linkVNs[begin]].sort_L_v2c[index][k] < sumNonLLR)
+			{
+				lastsumNonLLR = sumNonLLR;
+				sumNonLLR = Variablenode[Checknode[row].linkVNs[begin]].sort_L_v2c[index][k];
+			}
+			diff += (k != 0) ? 1 : 0;
+			if (diff <= Nc)
+			{
+				ConstructConf_Min_Max(Checknode, Variablenode, Nm, Nc, sumNonele, sumNonLLR, lastsumNonLLR, diff, begin + 1, except, end, row, EMS_L_c2v);
+				sumNonele = GFAdd(GFMultiply(Variablenode[Checknode[row].linkVNs[begin]].sort_Entr_v2c[index][k], Checknode[row].linkVNs_GF[begin]), sumNonele);
+				if (Variablenode[Checknode[row].linkVNs[begin]].sort_L_v2c[index][k] < sumNonLLR)
+				{
+					lastsumNonLLR = sumNonLLR;
+					sumNonLLR = Variablenode[Checknode[row].linkVNs[begin]].sort_L_v2c[index][k];
+				}
+				// sumNonLLR = sumNonLLR - Variablenode[Checknode[row].linkVNs[begin]].sort_L_v2c[index][k];
+				diff -= (k != 0) ? 1 : 0;
+			}
+			else
+			{
+				sumNonele = GFAdd(GFMultiply(Variablenode[Checknode[row].linkVNs[begin]].sort_Entr_v2c[index][k], Checknode[row].linkVNs_GF[begin]), sumNonele);
+				// sumNonLLR = sumNonLLR - Variablenode[Checknode[row].linkVNs[begin]].sort_L_v2c[index][k];
+				if (Variablenode[Checknode[row].linkVNs[begin]].sort_L_v2c[index][k] <= sumNonLLR)
+				{
+					sumNonLLR = lastsumNonLLR;
+				}
 				diff -= (k != 0) ? 1 : 0;
 				break;
 			}

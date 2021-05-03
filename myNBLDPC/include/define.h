@@ -56,7 +56,7 @@
 /*CUDA c相应参数*/
 #define MaxThreadPerBlock 1024 // 针对GeForce GTX 1050而言.
 #define PI (3.1415926)
-#define CPU_GPU 1               // 采用CPU还是GPU进行译码:0->CPU;1->GPU
+#define CPU_GPU 0               // 采用CPU还是GPU进行译码:0->CPU;1->GPU
 #define Num_Frames_OneTime 4096 // 一次同时处理的帧数
 #define Message_CW 0            // 提前终止和统计时只看信息位还是看整个码字:0->只看信息位;1->看整个码字
 
