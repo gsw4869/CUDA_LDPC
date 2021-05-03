@@ -156,8 +156,9 @@ int Decoding_EMS(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm,
 
 	iter_number = 0;
 	bool decode_correct = true;
-	while (iter_number++ < maxIT - 1)
+	while (iter_number < maxIT)
 	{
+		iter_number++;
 		for (int col = 0; col < H->Variablenode_num; col++)
 		{
 			memcpy(Variablenode[col].LLR, Variablenode[col].L_ch, (GFQ - 1) * sizeof(float));

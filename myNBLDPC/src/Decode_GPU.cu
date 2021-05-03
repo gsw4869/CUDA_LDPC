@@ -57,8 +57,8 @@ __device__ int DecideLLRVector_GPU(float *LLR, int GF)
 
 __device__ int GetCombCount(int n, int m)
 {
-    int i;
-    int a, b, c, s; // s = a/(b*c)
+    long int i;
+    long int a, b, c, s; // s = a/(b*c)
     a = b = c = 1;
     for (i = 1; i <= n; i++)
         a *= i;
@@ -130,13 +130,13 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
         for (int d = 0; d < Variablenode[col].weight; d++)
         {
             Variablenode[col].L_ch[GFQ - 1] = 0;
-            for (int q = 0; q < GFQ - 1; q++)
+            for (int q = 0; q < GFQ; q++)
             {
                 sort_L_v2c_temp[col * maxdv * GFQ + d * GFQ + q] = Variablenode[col].L_ch[q];
                 Variablenode[col].sort_L_v2c[d][q] = Variablenode[col].L_ch[q];
             }
         }
-        for (int q = 0; q < GFQ - 1; q++)
+        for (int q = 0; q < GFQ; q++)
         {
             L_ch_temp[col * (GFQ - 1) + q] = Variablenode[col].L_ch[q];
         }
@@ -175,9 +175,9 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
     int *DecodeOutput_GPU;
     cudaMalloc((void **)&DecodeOutput_GPU, H->Variablenode_num * sizeof(int));
 
-    while (iter_number++ < maxIT - 1)
+    while (iter_number < maxIT)
     {
-
+        iter_number++;
         Variablenode_EMS<<<((H->Variablenode_num % 128) ? (H->Variablenode_num / 128 + 1) : (H->Variablenode_num / 128)), 128>>>((const int *)Variablenode_weight, (const int *)Variablenode_linkCNs, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, (const float *)L_ch, LLR, DecodeOutput_GPU, H->Variablenode_num);
 
         cudaStatus = cudaMemcpy(DecodeOutput, DecodeOutput_GPU, H->Variablenode_num * sizeof(int), cudaMemcpyDeviceToHost);
