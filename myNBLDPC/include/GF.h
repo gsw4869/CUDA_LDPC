@@ -1,8 +1,8 @@
 #ifndef _GF_CUH_
 #define _GF_CUH_
 
-#include "define.cuh"
-#include "struct.cuh"
+#include "define.h"
+#include "struct.h"
 
 extern unsigned **TableAdd;
 extern unsigned **TableMultiply;

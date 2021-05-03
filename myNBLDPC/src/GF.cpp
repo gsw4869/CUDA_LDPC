@@ -6,7 +6,7 @@
  * @Description: In User Settings Edit
  * @FilePath: /myNBLDPC/src/GF.cpp
  */
-#include "GF.cuh"
+#include "GF.h"
 #include <cmath>
 #include <iostream>
 #include <fstream>

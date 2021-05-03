@@ -1,7 +1,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-#include "LDPC_Encoder.cuh"
-#include "struct.cuh"
+#include "LDPC_Encoder.h"
+#include "struct.h"
 
 void BitToSym(LDPCCode *H, int *CodeWord_sym, int *CodeWord_bit)
 {

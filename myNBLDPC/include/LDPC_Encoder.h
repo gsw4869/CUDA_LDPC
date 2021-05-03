@@ -1,8 +1,8 @@
 #ifndef _LDPC_ENCODER_CUH
 #define _LDPC_ENCODER_CUH
 
-#include "define.cuh"
-#include "struct.cuh"
+#include "define.h"
+#include "struct.h"
 
 void BitToSym(LDPCCode *H, int *CodeWord_sym, int *CodeWord_bit);
 

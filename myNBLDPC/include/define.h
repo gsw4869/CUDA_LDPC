@@ -9,8 +9,8 @@
 #include <memory.h>
 #include <time.h>
 //#include <direct.h>
-#include "struct.cuh"
-#include "Simulation.cuh"
+#include "struct.h"
+#include "Simulation.h"
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
@@ -20,13 +20,13 @@
 // LDPC_N576_K480_GF256_exp
 // LDPC_N576_K288_GF64_d1_exp
 
-#define Matrixfile "LDPC_N576_K480_GF256_exp.txt"
+#define Matrixfile "BDS.576.288.GF.64.txt"
 #define Constellationfile "./Constellation/BPSK.txt"
 #define n_QAM 2
-#define GFQ 256
-#define maxdc 12
+#define GFQ 64
+#define maxdc 4
 #define maxdv 2
-#define THREAD_NUM 0
+#define THREAD_NUM 1
 
 #define EMS_NM 3
 #define EMS_NC 3
@@ -45,9 +45,9 @@
 #define snrtype 0   // 0--Eb/No; 1--Es/No
 
 /*仿真参数*/
-#define startSNR 5.5
-#define stepSNR 0.5
-#define stopSNR 6
+#define startSNR 0
+#define stepSNR 1
+#define stopSNR 10
 
 #define leastErrorFrames 50 // 最少错误帧数
 #define leastTestFrames 100 // 最少仿真帧数

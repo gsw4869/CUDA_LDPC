@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "define.cuh"
+#include "define.h"
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-#include "LDPC_Decoder.cuh"
-#include "LDPC_Encoder.cuh"
-#include "GF.cuh"
+#include "LDPC_Decoder.h"
+#include "LDPC_Encoder.h"
+#include "GF.h"
 #include "math.h"
 #include "Decode_GPU.cuh"
 
@@ -192,22 +192,22 @@ int main()
 	{
 		CComplex_sym = (CComplex *)malloc(H->Variablenode_num * sizeof(CComplex));
 		BitToSym(H, CodeWord_sym, CodeWord_bit);
-		// for (int i = 0; i < H->Variablenode_num; i++)
-		// {
-		// 	CodeWord_sym[i] = CodeWord_sym_test[i];
-		// }
+		for (int i = 0; i < H->Variablenode_num; i++)
+		{
+			CodeWord_sym[i] = CodeWord_sym_test[i];
+		}
 		Modulate(H, CONSTELLATION, CComplex_sym, CodeWord_sym);
 	}
 	else
 	{
 		CComplex_sym = (CComplex *)malloc(H->bit_length * sizeof(CComplex));
-		// for (int i = 0; i < H->Variablenode_num; i++)
-		// {
-		// 	for (int j = 0; j < H->q_bit; j++)
-		// 	{
-		// 		CodeWord_bit[i * H->q_bit + j] = (CodeWord_sym_test[i] & (1 << j)) >> j;
-		// 	}
-		// }
+		for (int i = 0; i < H->Variablenode_num; i++)
+		{
+			for (int j = 0; j < H->q_bit; j++)
+			{
+				CodeWord_bit[i * H->q_bit + j] = (CodeWord_sym_test[i] & (1 << j)) >> j;
+			}
+		}
 		BitToSym(H, CodeWord_sym, CodeWord_bit);
 		Modulate(H, CONSTELLATION, CComplex_sym, CodeWord_bit);
 	}

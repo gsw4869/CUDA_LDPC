@@ -1,8 +1,8 @@
 #ifndef _LDPC_DECODER_CUH
 #define _LDPC_DECODER_CUH
 
-#include "define.cuh"
-#include "struct.cuh"
+#include "define.h"
+#include "struct.h"
 
 void Demodulate(const LDPCCode *H, AWGNChannel *AWGN, const CComplex *CONSTELLATION, VN *Variablenode, CComplex *CComplex_sym_Channelout);
 

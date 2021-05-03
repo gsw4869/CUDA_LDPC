@@ -1,9 +1,9 @@
 #ifndef _Decode_GPU_CUH_
 #define _Decode_GPU_CUH_
 
-#include "define.cuh"
-#include "struct.cuh"
-#include "LDPC_Decoder.cuh"
+#include "define.h"
+#include "struct.h"
+#include "LDPC_Decoder.h"
 #include "float.h"
 
 __device__ int GFAdd_GPU(int ele1, int ele2, const unsigned *TableAdd_GPU);

@@ -1,9 +1,9 @@
 #ifndef _SIMULATION_CUH_
 #define _SIMULATION_CUH_
 
-#include "define.cuh"
-#include "struct.cuh"
-#include "GF.cuh"
+#include "define.h"
+#include "struct.h"
+#include "GF.h"
 
 void Simulation_CPU(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, const CComplex *CONSTELLATION, VN *Variablenode, CN *Checknode, const CComplex *CComplex_sym, const int *CodeWord_sym);
 

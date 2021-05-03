@@ -1,7 +1,7 @@
 #ifndef _STRUCT_H_
 #define _STRUCT_H_
 
-#include "define.cuh"
+#include "define.h"
 #include <mutex>
 #include <thread>
 #include <vector>

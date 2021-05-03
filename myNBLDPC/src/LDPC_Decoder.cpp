@@ -6,12 +6,12 @@
 #include <memory.h>
 #include <time.h>
 //#include <direct.h>
-#include "define.cuh"
-#include "struct.cuh"
+#include "define.h"
+#include "struct.h"
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-#include "LDPC_Decoder.cuh"
-#include "GF.cuh"
+#include "LDPC_Decoder.h"
+#include "GF.h"
 #include "float.h"
 
 void BubleSort(float a[], int n, int index[])

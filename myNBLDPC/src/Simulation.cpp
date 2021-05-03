@@ -1,6 +1,6 @@
-#include "Simulation.cuh"
-#include "LDPC_Encoder.cuh"
-#include "LDPC_Decoder.cuh"
+#include "Simulation.h"
+#include "LDPC_Encoder.h"
+#include "LDPC_Decoder.h"
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include <assert.h>

@@ -3,7 +3,7 @@ project(cuda-ldpc)
 include(CheckLanguage)
 include(CTest)
 
-set(SOURCES src/main.cu src/LDPC_Decoder.cu src/LDPC_Encoder.cu src/Simulation.cu src/GF.cu src/Decode_GPU.cu src/struct.cu)
+set(SOURCES src/main.cu src/LDPC_Decoder.cpp src/LDPC_Encoder.cpp src/Simulation.cpp src/GF.cpp src/Decode_GPU.cu src/struct.cpp)
 
 
 add_executable(${PROJECT_NAME} ${SOURCES})

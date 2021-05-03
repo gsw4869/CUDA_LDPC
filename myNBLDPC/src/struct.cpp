@@ -1,7 +1,7 @@
 
-#include "define.cuh"
-#include "struct.cuh"
-#include "GF.cuh"
+#include "define.h"
+#include "struct.h"
+#include "GF.h"
 
 void freeVN(const LDPCCode *H, VN *A)
 {
