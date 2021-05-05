@@ -450,7 +450,16 @@ __global__ void Checknode_EMS(const unsigned *TableMultiply_GPU, const unsigned 
                 // diff = 0;
                 // ConstructConf_GPU((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, EMS_Nm, EMS_Nc, sumNonele, sumNonLLR, diff, 0, dc, Checknode_weight[offset] - 1, offset, EMS_L_c2v, (const int *)Variblenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c);
                 int *bit = new int[Checknode_weight[offset] - 1];
-                for (int choose_n = 2; choose_n <= EMS_Nc; choose_n++)
+                int EMS_Nc_temp;
+                if (EMS_Nc == maxdc - 1)
+                {
+                    EMS_Nc_temp = Checknode_weight[offset] - 1;
+                }
+                else
+                {
+                    EMS_Nc_temp = EMS_Nc;
+                }
+                for (int choose_n = 2; choose_n <= EMS_Nc_temp; choose_n++)
                 {
 
                     for (int k = 0; k < Checknode_weight[offset] - 1; k++)

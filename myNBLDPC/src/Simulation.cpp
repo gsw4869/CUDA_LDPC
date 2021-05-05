@@ -51,9 +51,19 @@ void decode_once_cpu(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, cons
 
 		start = std::chrono::steady_clock::now();
 
-		// Decoding_EMS(H, Variablenode, Checknode, EMS_NM, EMS_NC, DecodeOutput, iter_number);
+		if (decoder_method == 0)
+		{
+			Decoding_EMS(H, Variablenode, Checknode, EMS_NM, EMS_NC, DecodeOutput, iter_number);
+		}
+		else if (decoder_method == 1)
+		{
 
-		Decoding_Min_Max(H, Variablenode, Checknode, EMS_NM, EMS_NC, DecodeOutput, iter_number);
+			Decoding_TMM(H, Variablenode, Checknode, EMS_NM, EMS_NC, DecodeOutput, iter_number);
+		}
+		else if (decoder_method == 2)
+		{
+			Decoding_EMS(H, Variablenode, Checknode, GFQ, maxdc - 1, DecodeOutput, iter_number);
+		}
 
 		end = std::chrono::steady_clock::now();
 
@@ -111,8 +121,19 @@ void decode_once_gpu(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, cons
 
 		start = std::chrono::steady_clock::now();
 
-		Decoding_EMS_GPU(H, Variablenode, Checknode, EMS_NM, EMS_NC, DecodeOutput, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Variablenode_weight, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, iter_number);
-
+		if (decoder_method == 0)
+		{
+			Decoding_EMS_GPU(H, Variablenode, Checknode, EMS_NM, EMS_NC, DecodeOutput, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Variablenode_weight, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, iter_number);
+		}
+		else if (decoder_method == 1)
+		{
+			printf("unfinished\n");
+			exit(0);
+		}
+		else if (decoder_method == 2)
+		{
+			Decoding_EMS_GPU(H, Variablenode, Checknode, GFQ, maxdc - 1, DecodeOutput, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Variablenode_weight, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, iter_number);
+		}
 		end = std::chrono::steady_clock::now();
 
 		mtx.lock();
@@ -381,8 +402,8 @@ void Get_H(LDPCCode *H, VN *Variablenode, CN *Checknode)
 			Variablenode[j * H->Variablenode_num + i].weight = index1;
 			Variablenode[j * H->Variablenode_num + i].linkCNs = (int *)malloc(Variablenode[i].weight * sizeof(int));
 			Variablenode[j * H->Variablenode_num + i].linkCNs_GF = (int *)malloc(Variablenode[i].weight * sizeof(int));
-			Variablenode[j * H->Variablenode_num + i].L_ch = (float *)malloc((GFQ - 1) * sizeof(float));
-			Variablenode[j * H->Variablenode_num + i].LLR = (float *)malloc((GFQ - 1) * sizeof(float));
+			Variablenode[j * H->Variablenode_num + i].L_ch = (float *)malloc((GFQ) * sizeof(float));
+			Variablenode[j * H->Variablenode_num + i].LLR = (float *)malloc((GFQ) * sizeof(float));
 			Variablenode[j * H->Variablenode_num + i].sort_L_v2c = malloc_2_float(Variablenode[i].weight, GFQ);
 			Variablenode[j * H->Variablenode_num + i].sort_Entr_v2c = malloc_2(Variablenode[i].weight, GFQ);
 		}
