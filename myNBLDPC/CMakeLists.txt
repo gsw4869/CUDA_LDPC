@@ -8,11 +8,17 @@ set(SOURCES src/main.cu src/LDPC_Decoder.cpp src/LDPC_Encoder.cpp src/Simulation
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-# set(CUDA_NVCC_FLAGS "-ccbin gcc-7") set(CMAKE_CUDA_COMPILER
-# "/usr/local/cuda-11.0/bin/nvcc")
+
+# set(CUDA_NVCC_FLAGS "-ccbin gcc-7")
+# set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
+# enable_language(CUDA)
+# find_package(CUDA REQUIRED)
+# include_directories(${CUDA_INCLUDE_DIRS})
 check_language(CUDA)
 if(CMAKE_CUDA_COMPILER)
   enable_language(CUDA)
+  find_package(CUDA REQUIRED)
+  include_directories(${CUDA_INCLUDE_DIRS})
   set_property(TARGET ${PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES OFF)
 else()
   message(STATUS "No CUDA detected. GPU wont be used.")
