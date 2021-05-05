@@ -64,6 +64,10 @@ void decode_once_cpu(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, cons
 		{
 			Decoding_EMS(H, Variablenode, Checknode, GFQ, maxdc - 1, DecodeOutput, iter_number);
 		}
+		else if (decoder_method == 3)
+		{
+			Decoding_layered_TMM(H, Variablenode, Checknode, EMS_NM, EMS_NC, DecodeOutput, iter_number);
+		}
 
 		end = std::chrono::steady_clock::now();
 
@@ -133,6 +137,11 @@ void decode_once_gpu(const LDPCCode *H, AWGNChannel *AWGN, Simulation *SIM, cons
 		else if (decoder_method == 2)
 		{
 			Decoding_EMS_GPU(H, Variablenode, Checknode, GFQ, maxdc - 1, DecodeOutput, (const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const int *)Variablenode_weight, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, iter_number);
+		}
+		else if (decoder_method == 3)
+		{
+			printf("unfinished\n");
+			exit(0);
 		}
 		end = std::chrono::steady_clock::now();
 

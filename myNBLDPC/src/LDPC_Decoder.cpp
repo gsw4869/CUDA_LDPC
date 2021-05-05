@@ -417,10 +417,194 @@ int Decoding_TMM(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm,
 	while (iter_number < maxIT)
 	{
 		iter_number++;
+		// for (int col = 0; col < H->Variablenode_num; col++)
+		// {
+		// 	DecodeOutput[col] = d_DecideLLRVector(Variablenode[col].LLR, GFQ);
+		// }
+
+		for (int col = 0; col < H->Variablenode_num; col++)
+		{
+			for (int d = 0; d < Variablenode[col].weight; d++)
+			{
+				for (int q = 0; q < GFQ; q++)
+				{
+					Variablenode[col].LLR[q] += Checknode[Variablenode[col].linkCNs[d]].L_c2v[index_in_CN(Variablenode, col, d, Checknode)][q];
+				}
+			}
+			DecodeOutput[col] = d_DecideLLRVector(Variablenode[col].LLR, GFQ);
+		}
+
+		decode_correct = true;
+		int sum_temp = 0;
+		for (int row = 0; row < H->Checknode_num; row++)
+		{
+			for (int i = 0; i < Checknode[row].weight; i++)
+			{
+				sum_temp = GFAdd(sum_temp, GFMultiply(DecodeOutput[Checknode[row].linkVNs[i]], Checknode[row].linkVNs_GF[i]));
+			}
+			if (sum_temp)
+			{
+				decode_correct = false;
+				break;
+			}
+		}
+		if (decode_correct)
+		{
+			free(TMM_Zn);
+			free(TMM_deltaU);
+			free(TMM_Min1);
+			free(TMM_Min2);
+			free(TMM_Min1_Col);
+			free(TMM_I);
+			free(TMM_Path);
+			free(TMM_E);
+			free(TMM_Lc2p);
+			iter_number--;
+			return 1;
+		}
+
+		for (int col = 0; col < H->Variablenode_num; col++)
+		{
+			for (int dv = 0; dv < Variablenode[col].weight; dv++)
+			{
+				for (int q = 0; q < GFQ; q++)
+				{
+					Variablenode[col].sort_L_v2c[dv][q] = Variablenode[col].LLR[q] - Checknode[Variablenode[col].linkCNs[dv]].L_c2v[index_in_CN(Variablenode, col, dv, Checknode)][q];
+				}
+			}
+		}
+
+		for (int row = 0; row < H->Checknode_num; row++)
+		{
+			TMM_Syndrome = 0;
+			// for (int d = 0; d < Checknode[row].weight; d++)
+			// {
+			// 	for (int q = 0; q < GFQ; q++)
+			// 	{
+			// 		Variablenode[Checknode[row].linkVNs[d]].sort_L_v2c[index_in_VN(Checknode, row, d, Variablenode)][q] = Variablenode[Checknode[row].linkVNs[d]].LLR[q] - Checknode[row].L_c2v[d][q];
+			// 	}
+			// }
+
+			d_TMM_Get_Zn(Checknode, Variablenode, TMM_Zn, row, TMM_Syndrome);
+
+			d_TMM_Get_deltaU(Checknode, Variablenode, TMM_Zn, TMM_deltaU, row);
+
+			TMM_Get_Min(Checknode, TMM_Zn, TMM_deltaU, TMM_Min1, TMM_Min2, TMM_Min1_Col, row);
+
+			TMM_ConstructConf(TMM_deltaU, TMM_Min1, TMM_Min2, TMM_Min1_Col, TMM_I, TMM_Path, TMM_E);
+
+			for (int dc = 0; dc < Checknode[row].weight; dc++)
+			{
+				// choose to output
+				TMM_Lc2p[0] = 0;
+				for (int eta = 1; eta < GFQ; eta++)
+				{
+					if (dc != TMM_Path[eta * 2 + 0] && dc != TMM_Path[eta * 2 + 1])
+					{
+						TMM_Lc2p[eta] = TMM_I[eta];
+					}
+					else
+					{
+						TMM_Lc2p[eta] = TMM_E[eta];
+					}
+				}
+
+				int h_inverse = GFInverse(Checknode[row].linkVNs_GF[dc]);
+				int beta_syn = GFAdd(TMM_Syndrome, TMM_Zn[dc]);
+				double L0 = TMM_Lc2p[beta_syn];
+				for (int eta = 0; eta < GFQ; eta++)
+				{
+					int beta =
+						GFMultiply(h_inverse, GFAdd(eta, beta_syn));
+					Checknode[row].L_c2v[dc][beta] = (TMM_Lc2p[eta]) * 0.8;
+				}
+			}
+
+			// for (int d = 0; d < Checknode[row].weight; d++)
+			// {
+			// 	for (int q = 0; q < GFQ; q++)
+			// 	{
+			// 		Variablenode[Checknode[row].linkVNs[d]].LLR[q] = Variablenode[Checknode[row].linkVNs[d]].sort_L_v2c[index_in_VN(Checknode, row, d, Variablenode)][q] + Checknode[row].L_c2v[d][q];
+			// 	}
+			// }
+		}
+	}
+	free(TMM_Zn);
+	free(TMM_deltaU);
+	free(TMM_Min1);
+	free(TMM_Min2);
+	free(TMM_Min1_Col);
+	free(TMM_I);
+	free(TMM_Path);
+	free(TMM_E);
+	free(TMM_Lc2p);
+	return 0;
+}
+
+int Decoding_layered_TMM(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, int &iter_number)
+{
+	float max = -DBL_MAX;
+	for (int col = 0; col < H->Variablenode_num; col++)
+	{
+		max = -DBL_MAX;
+		for (int q = 0; q < GFQ - 1; q++)
+		{
+			if (Variablenode[col].L_ch[q] > max)
+			{
+				max = Variablenode[col].L_ch[q];
+			}
+		}
+		for (int d = 0; d < Variablenode[col].weight; d++)
+		{
+			for (int q = 0; q < GFQ; q++)
+			{
+				if (q == 0)
+				{
+					Variablenode[col].sort_L_v2c[d][q] = max;
+					Variablenode[col].LLR[q] = max;
+				}
+				else
+				{
+					Variablenode[col].sort_L_v2c[d][q] = max - Variablenode[col].L_ch[q - 1];
+					Variablenode[col].LLR[q] = max - Variablenode[col].L_ch[q - 1];
+				}
+			}
+		}
+	}
+
+	for (int row = 0; row < H->Checknode_num; row++)
+	{
+		for (int d = 0; d < Checknode[row].weight; d++)
+		{
+			for (int q = 0; q < GFQ; q++)
+			{
+				Checknode[row].L_c2v[d][q] = 0;
+			}
+		}
+	}
+
+	int *TMM_Zn = (int *)malloc(maxdc * sizeof(int));
+	float *TMM_deltaU = (float *)malloc(maxdc * GFQ * sizeof(float));
+	float *TMM_Min1 = (float *)malloc(GFQ * sizeof(float));
+	float *TMM_Min2 = (float *)malloc(GFQ * sizeof(float));
+	int *TMM_Min1_Col = (int *)malloc(GFQ * sizeof(int));
+	float *TMM_I = (float *)malloc(GFQ * sizeof(float));
+	int *TMM_Path = (int *)malloc(GFQ * 2 * sizeof(int));
+	float *TMM_E = (float *)malloc(GFQ * sizeof(float));
+	float *TMM_Lc2p = (float *)malloc(GFQ * sizeof(float));
+	int TMM_Syndrome = 0;
+
+	iter_number = 0;
+	bool decode_correct = true;
+
+	while (iter_number < maxIT)
+	{
+		iter_number++;
 		for (int col = 0; col < H->Variablenode_num; col++)
 		{
 			DecodeOutput[col] = d_DecideLLRVector(Variablenode[col].LLR, GFQ);
 		}
+
 		decode_correct = true;
 		int sum_temp = 0;
 		for (int row = 0; row < H->Checknode_num; row++)

@@ -22,6 +22,8 @@ int DecideLLRVector(float *LLR, int GF);
 
 int Decoding_TMM(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, int &iter_number);
 
+int Decoding_layered_TMM(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS_Nm, int EMS_Nc, int *DecodeOutput, int &iter_number);
+
 int d_TMM_Get_Zn(CN *Checknode, VN *Variablenode, int *TMM_Zn, int row, int &TMM_Syndrome);
 
 int d_TMM_Get_deltaU(CN *Checknode, VN *Variablenode, int *TMM_Zn, float *TMM_deltaU, int row);
