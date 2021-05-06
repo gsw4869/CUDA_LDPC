@@ -219,7 +219,7 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
     while (iter_number < maxIT)
     {
         iter_number++;
-        Variablenode_EMS<<<((H->Variablenode_num % 128) ? (H->Variablenode_num / 128 + 1) : (H->Variablenode_num / 128)), 128>>>((const int *)Variablenode_weight, (const int *)Variablenode_linkCNs, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, (const float *)L_ch, LLR, DecodeOutput_GPU, H->Variablenode_num);
+        Variablenode_EMS<<<H->Variablenode_num,1>>>((const int *)Variablenode_weight, (const int *)Variablenode_linkCNs, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, (const float *)L_ch, LLR, DecodeOutput_GPU, H->Variablenode_num);
 
         cudaStatus = cudaMemcpy(DecodeOutput, DecodeOutput_GPU, H->Variablenode_num * sizeof(int), cudaMemcpyDeviceToHost);
         if (cudaStatus != cudaSuccess)
@@ -302,7 +302,7 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
         //     }
         // }
 
-        Variablenode_Update_EMS<<<((H->Variablenode_num % 128) ? (H->Variablenode_num / 128 + 1) : (H->Variablenode_num / 128)), 128>>>((const int *)Variablenode_weight, (const int *)Variablenode_linkCNs, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, (const float *)L_ch, LLR, H->Variablenode_num);
+        Variablenode_Update_EMS<<<H->Variablenode_num,1>>>((const int *)Variablenode_weight, (const int *)Variablenode_linkCNs, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, (const float *)L_ch, LLR, H->Variablenode_num);
 
         // cudaStatus = cudaMemcpy(sort_Entr_v2c, sort_Entr_v2c_temp, H->Variablenode_num * maxdv * GFQ * sizeof(int), cudaMemcpyHostToDevice);
         // if (cudaStatus != cudaSuccess)
@@ -318,7 +318,7 @@ int Decoding_EMS_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
         // }
         // // message from check to var
 
-        Checknode_EMS<<<((H->Checknode_num % 128) ? (H->Checknode_num / 128 + 1) : (H->Checknode_num / 128)), 128>>>((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, EMS_Nm, EMS_Nc, (const int *)Checknode_weight, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, H->Checknode_num);
+        Checknode_EMS<<<H->Checknode_num,1>>>((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, EMS_Nm, EMS_Nc, (const int *)Checknode_weight, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, H->Checknode_num);
         // Checknode_EMS<<<1, 1>>>((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, EMS_Nm, EMS_Nc, (const int *)Checknode_weight, (const int *)Variablenode_linkCNs, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_Entr_v2c, sort_L_v2c, Checknode_L_c2v, H->Checknode_num);
 
         // cudaStatus = cudaMemcpy(Checknode_L_c2v_temp, Checknode_L_c2v, H->Checknode_num * maxdc * GFQ * sizeof(float), cudaMemcpyDeviceToHost);
@@ -776,7 +776,7 @@ int Decoding_TMM_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
     while (iter_number < maxIT)
     {
         iter_number++;
-        Variablenode_TMM<<<((H->Variablenode_num % 128) ? (H->Variablenode_num / 128 + 1) : (H->Variablenode_num / 128)), 128>>>((const int *)Variablenode_weight, (const int *)Variablenode_linkCNs, sort_L_v2c, Checknode_L_c2v, LLR, DecodeOutput_GPU, H->Variablenode_num);
+        Variablenode_TMM<<<H->Variablenode_num,1>>>((const int *)Variablenode_weight, (const int *)Variablenode_linkCNs, sort_L_v2c, Checknode_L_c2v, LLR, DecodeOutput_GPU, H->Variablenode_num);
 
         cudaStatus = cudaMemcpy(DecodeOutput, DecodeOutput_GPU, H->Variablenode_num * sizeof(int), cudaMemcpyDeviceToHost);
         if (cudaStatus != cudaSuccess)
@@ -813,9 +813,9 @@ int Decoding_TMM_GPU(const LDPCCode *H, VN *Variablenode, CN *Checknode, int EMS
             return 1;
         }
 
-        Variablenode_Update_TMM<<<((H->Variablenode_num % 128) ? (H->Variablenode_num / 128 + 1) : (H->Variablenode_num / 128)), 128>>>((const int *)Variablenode_weight, (const int *)Variablenode_linkCNs, sort_L_v2c, Checknode_L_c2v, LLR, H->Variablenode_num);
+        Variablenode_Update_TMM<<<H->Variablenode_num,1>>>((const int *)Variablenode_weight, (const int *)Variablenode_linkCNs, sort_L_v2c, Checknode_L_c2v, LLR, H->Variablenode_num);
 
-        Checknode_TMM<<<((H->Checknode_num % 128) ? (H->Checknode_num / 128 + 1) : (H->Checknode_num / 128)), 128>>>((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const unsigned *)TableInverse_GPU, (const int *)Checknode_weight, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_L_v2c, Checknode_L_c2v, H->Checknode_num);
+        Checknode_TMM<<<H->Checknode_num,1>>>((const unsigned *)TableMultiply_GPU, (const unsigned *)TableAdd_GPU, (const unsigned *)TableInverse_GPU, (const int *)Checknode_weight, (const int *)Checknode_linkVNs, (const int *)Checknode_linkVNs_GF, sort_L_v2c, Checknode_L_c2v, H->Checknode_num);
     }
     cudaFree(sort_L_v2c);
     cudaFree(Checknode_L_c2v);
