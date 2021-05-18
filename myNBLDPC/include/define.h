@@ -28,11 +28,11 @@
 #define maxdv 2
 #define THREAD_NUM 1
 
-#define EMS_NM 3
-#define EMS_NC 3
+#define EMS_NM 2
+#define EMS_NC 2
 
 /*LDPC译码器相关参数*/
-#define maxIT 10 // LDPC译码器最大迭代次数.其中对Q值赋初值用了一次迭代
+#define maxIT 20 // LDPC译码器最大迭代次数.其中对Q值赋初值用了一次迭代
 //#define	opt_R				(0.83)								// NMS算法中的修正因子.浮点译码器
 #define decoder_method 0 // 译码算法:0->EMS,1->TMM,2->log_QSPA,3->layered TMM
 
@@ -46,12 +46,12 @@
 
 /*仿真参数*/
 #define startSNR 0
-#define stepSNR 1
-#define stopSNR 10
+#define stepSNR 0.5
+#define stopSNR 5
 
-#define leastErrorFrames 50 // 最少错误帧数
-#define leastTestFrames 100 // 最少仿真帧数
-#define displayStep 100000  // 定义将译码结果写入相应txt文件的频率
+#define leastErrorFrames 50  // 最少错误帧数
+#define leastTestFrames 1000 // 最少仿真帧数
+#define displayStep 100000   // 定义将译码结果写入相应txt文件的频率
 
 /*CUDA c相应参数*/
 #define MaxThreadPerBlock 1024 // 针对GeForce GTX 1050而言.
