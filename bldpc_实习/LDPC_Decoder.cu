@@ -13,12 +13,12 @@
 #include "LDPC_Decoder.cuh"
 
 /*
-* D:Ò»ÂëÊä³ö
-* Channel_Out:¾­¹ıAWGNĞÅµÀµÄĞÅºÅ
-* Weight_Checknode:Ğ£Ñé½ÚµãÖØÁ¿
-* Weight_Variablenode:±äÁ¿½ÚµãÖØÁ¿
-* Address_Variablenode:Ã¿¸ö±äÁ¿½ÚµãËù¶ÔÓ¦Ğ£Ñé½ÚµãµÄmemory_rqµÄµØÖ·
-* LDPC:µü´ú´ÎÊı
+* D:ä¸€ç è¾“å‡º
+* Channel_Out:ç»è¿‡AWGNä¿¡é“çš„ä¿¡å·
+* Weight_Checknode:æ ¡éªŒèŠ‚ç‚¹é‡é‡
+* Weight_Variablenode:å˜é‡èŠ‚ç‚¹é‡é‡
+* Address_Variablenode:æ¯ä¸ªå˜é‡èŠ‚ç‚¹æ‰€å¯¹åº”æ ¡éªŒèŠ‚ç‚¹çš„memory_rqçš„åœ°å€
+* LDPC:è¿­ä»£æ¬¡æ•°
 */
 void LDPC_Decoder_GPU(int* D, float* Channel_Out, cudaDeviceProp prop, int* Address_Variablenode, int* Weight_Checknode, int* Weight_Variablenode, LDPCCode *LDPC)
 {
@@ -28,42 +28,42 @@ void LDPC_Decoder_GPU(int* D, float* Channel_Out, cudaDeviceProp prop, int* Addr
 	float* Memory_RQ;
 	int* Weight_Checknode_GPU, *Weight_Variablenode_GPU;
 	int* D_GPU;
-	cudaEvent_t GPU_start;			// GPUËÙÂÊÍ³¼Æ²ÎÊı
+	cudaEvent_t GPU_start;			// GPUé€Ÿç‡ç»Ÿè®¡å‚æ•°
 	cudaEvent_t GPU_stop;
 	cudaEventCreate(&GPU_start);
 	cudaEventCreate(&GPU_stop);
 
 	Length = (Message_CW == 0) ? msgLen : CW_Len;
 
-	cudaStatus = cudaMalloc((void**)&Memory_RQ, parLen * Weight_Checknode[J] * Num_Frames_OneTime * sizeof(float));	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½GPUï¿½ï¿½global memoryï¿½ï¿½
+	cudaStatus = cudaMalloc((void**)&Memory_RQ, parLen * Weight_Checknode[J] * Num_Frames_OneTime * sizeof(float));	// é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·GPUé”Ÿæ–¤æ‹·global memoryé”Ÿæ–¤æ‹·
 	if (cudaStatus != cudaSuccess)
 	{
 		printf("Cannot malloc Memory_RQ in LDPC_Decoder_GPU on device, exit!\n");
 		//getch();
 		exit(0);
 	}
-	cudaStatus = cudaMalloc((void**)&D_GPU, (CW_Len + 1) * Num_Frames_OneTime * sizeof(int));		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½GPUï¿½ï¿½global memoryï¿½ï¿½
+	cudaStatus = cudaMalloc((void**)&D_GPU, (CW_Len + 1) * Num_Frames_OneTime * sizeof(int));		// é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·GPUé”Ÿæ–¤æ‹·global memoryé”Ÿæ–¤æ‹·
 	if (cudaStatus != cudaSuccess)
 	{
 		printf("Cannot malloc D_GPU in LDPC_Decoder_GPU on device, exit!\n");
 		//getch();
 		exit(0);
 	}
-	cudaStatus = cudaMalloc((void**)&Weight_Checknode_GPU, (J + 1) * sizeof(int));		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½GPUï¿½ï¿½global memoryï¿½ï¿½
+	cudaStatus = cudaMalloc((void**)&Weight_Checknode_GPU, (J + 1) * sizeof(int));		// é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·GPUé”Ÿæ–¤æ‹·global memoryé”Ÿæ–¤æ‹·
 	if (cudaStatus != cudaSuccess)
 	{
 		printf("Cannot malloc Weight_Checknode_GPU in LDPC_Decoder_GPU on device, exit!\n");
 		//getch();
 		exit(0);
 	}
-	cudaStatus = cudaMalloc((void**)&Weight_Variablenode_GPU, (L + 1) * sizeof(int));		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½GPUï¿½ï¿½global memoryï¿½ï¿½
+	cudaStatus = cudaMalloc((void**)&Weight_Variablenode_GPU, (L + 1) * sizeof(int));		// é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·GPUé”Ÿæ–¤æ‹·global memoryé”Ÿæ–¤æ‹·
 	if (cudaStatus != cudaSuccess)
 	{
 		printf("Cannot malloc Weight_Checknode_GPU in LDPC_Decoder_GPU on device, exit!\n");
 		//getch();
 		exit(0);
 	}
-	cudaStatus = cudaMemcpy(Weight_Checknode_GPU, Weight_Checknode, (J + 1) * sizeof(int), cudaMemcpyHostToDevice);//Jï¿½ï¿½ Lï¿½Ğ£ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Î?ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿?
+	cudaStatus = cudaMemcpy(Weight_Checknode_GPU, Weight_Checknode, (J + 1) * sizeof(int), cudaMemcpyHostToDevice);//Jé”Ÿæ–¤æ‹· Lé”Ÿå«ï½æ‹·é”Ÿæ–¤æ‹·é”Ÿæ­ä¼™æ‹·é”Ÿè½¿?é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·é”Ÿ?
 	if (cudaStatus != cudaSuccess)
 	{
 		printf("Cannot copy Weight_Checknode to Weight_Checknode_GPU in LDPC_Decoder_GPU, exit!\n");
@@ -78,8 +78,8 @@ void LDPC_Decoder_GPU(int* D, float* Channel_Out, cudaDeviceProp prop, int* Addr
 		exit(0);
 	}
 
-	// ³õÊ¼»¯
-	cudaStatus = cudaMemset(Memory_RQ, 0, parLen * Weight_Checknode[J] * Num_Frames_OneTime * sizeof(float));	// ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,Îªï¿½ï¿½Ò»ï¿½Îµï¿½ï¿½ï¿½ï¿½ï¿½×¼ï¿½ï¿½,parlenĞ£ï¿½ï¿½Î»ï¿½ï¿½ï¿½È£ï¿½J*Zï¿½ï¿½
+	// åˆå§‹åŒ–
+	cudaStatus = cudaMemset(Memory_RQ, 0, parLen * Weight_Checknode[J] * Num_Frames_OneTime * sizeof(float));	// é”ŸèŠ¥å‚¨é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·,ä¸ºé”Ÿæ–¤æ‹·ä¸€é”Ÿè½¿ç¢‰æ‹·é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·å‡†é”Ÿæ–¤æ‹·,parlenæ ¡é”Ÿæ–¤æ‹·ä½é”Ÿæ–¤æ‹·é”Ÿé¥ºï½æ‹·J*Zé”Ÿæ–¤æ‹·
 	if (cudaStatus != cudaSuccess)
 	{
 		printf("Cannot memset Memory_RQ in LDPC_Decoder_GPU on device, exit!\n");
@@ -94,12 +94,12 @@ void LDPC_Decoder_GPU(int* D, float* Channel_Out, cudaDeviceProp prop, int* Addr
 	while (LDPC->iteraTime < maxIT)
 	{
 		LDPC->iteraTime = LDPC->iteraTime + 1;		
-		if ((Z * Num_Frames_OneTime) % prop.maxThreadsPerBlock == 0)	// ´ËÊ±¸ù¾İprop.maxThreadsPerBlock·Ö³ÉµÄÃ¿¸öÏß³Ì¿é¾ùÊôÓÚÒ»¸öÁĞ¿é»òÕßĞĞ¿éµÄ½Úµã,Ò»¸ö¿éÖ®¼ä¿ÉÒÔ¹²ÏíÖØÁ¿
+		if ((Z * Num_Frames_OneTime) % prop.maxThreadsPerBlock == 0)	// æ­¤æ—¶æ ¹æ®prop.maxThreadsPerBlockåˆ†æˆçš„æ¯ä¸ªçº¿ç¨‹å—å‡å±äºä¸€ä¸ªåˆ—å—æˆ–è€…è¡Œå—çš„èŠ‚ç‚¹,ä¸€ä¸ªå—ä¹‹é—´å¯ä»¥å…±äº«é‡é‡
 		{
 			cudaThreadSynchronize();
 			ThreadPerBlock = prop.maxThreadsPerBlock;
 			Num_Block = ((Num_Frames_OneTime * CW_Len) % ThreadPerBlock == 0) ? (Num_Frames_OneTime * CW_Len) / ThreadPerBlock : ((Num_Frames_OneTime * CW_Len) / ThreadPerBlock) + 1;
-			Variablenode_Shared_Kernel<<<Num_Block, ThreadPerBlock>>>(Memory_RQ, D_GPU, Channel_Out, Address_Variablenode, Weight_Variablenode_GPU);//±äÁ¿½Úµã¼ÆËã£¬µÃµ½L
+			Variablenode_Shared_Kernel<<<Num_Block, ThreadPerBlock>>>(Memory_RQ, D_GPU, Channel_Out, Address_Variablenode, Weight_Variablenode_GPU);//å˜é‡èŠ‚ç‚¹è®¡ç®—ï¼Œå¾—åˆ°L
 
 			ThreadPerBlock = prop.maxThreadsPerBlock;
 			Num_Block = ((Num_Frames_OneTime * parLen) % ThreadPerBlock == 0) ? (Num_Frames_OneTime * parLen) / ThreadPerBlock : ((Num_Frames_OneTime * parLen) / ThreadPerBlock) + 1;
@@ -116,7 +116,7 @@ void LDPC_Decoder_GPU(int* D, float* Channel_Out, cudaDeviceProp prop, int* Addr
 			cudaThreadSynchronize();
 			ThreadPerBlock = prop.maxThreadsPerBlock;
 			Num_Block = ((Num_Frames_OneTime * CW_Len) % ThreadPerBlock == 0) ? (Num_Frames_OneTime * CW_Len) / ThreadPerBlock : ((Num_Frames_OneTime * CW_Len) / ThreadPerBlock) + 1;
-			Variablenode_Kernel<<<Num_Block, ThreadPerBlock>>>(Memory_RQ, D_GPU, Channel_Out, Address_Variablenode, Weight_Variablenode_GPU);//±äÁ¿½Úµã¼ÆËã£¬µÃµ½L
+			Variablenode_Kernel<<<Num_Block, ThreadPerBlock>>>(Memory_RQ, D_GPU, Channel_Out, Address_Variablenode, Weight_Variablenode_GPU);//å˜é‡èŠ‚ç‚¹è®¡ç®—ï¼Œå¾—åˆ°L
 
 			cudaThreadSynchronize();
 
@@ -138,18 +138,18 @@ void LDPC_Decoder_GPU(int* D, float* Channel_Out, cudaDeviceProp prop, int* Addr
 		{
 			for (index1 = 0; index1 < Num_Frames_OneTime; index1++)
 			{
-				D[index1 + CW_Len * Num_Frames_OneTime] += D[index0 * Num_Frames_OneTime + index1];//°ÑÃ¿Ò»Ö¡µÄËùÓĞ×Ö½Ú¼ÓÆğÀ´ÇóºÍ
+				D[index1 + CW_Len * Num_Frames_OneTime] += D[index0 * Num_Frames_OneTime + index1];//æŠŠæ¯ä¸€å¸§çš„æ‰€æœ‰å­—èŠ‚åŠ èµ·æ¥æ±‚å’Œ
 			}
 		}
 		index0 = 0;
 		for (index1 = 0; index1 < Num_Frames_OneTime; index1++)
 		{
-			D[index1 + CW_Len * Num_Frames_OneTime] = (D[index1 + CW_Len * Num_Frames_OneTime] == 0) ? 1 : 0;//È«ÁãĞòÁĞ¼ÓÆğÀ´ÎªÈ«0£¬ÕıÈ·½á¹ûÎª1
-			index0 += D[index1 + CW_Len * Num_Frames_OneTime];//Í³¼Æ¶ÔµÄÖ¡Êı
+			D[index1 + CW_Len * Num_Frames_OneTime] = (D[index1 + CW_Len * Num_Frames_OneTime] == 0) ? 1 : 0;//å…¨é›¶åºåˆ—åŠ èµ·æ¥ä¸ºå…¨0ï¼Œæ­£ç¡®ç»“æœä¸º1
+			index0 += D[index1 + CW_Len * Num_Frames_OneTime];//ç»Ÿè®¡å¯¹çš„å¸§æ•°
 		}
 		if (index0 == Num_Frames_OneTime)
 		{
-			break;//ËùÓĞÖ¡¶¼½âÂëÍê
+			break;//æ‰€æœ‰å¸§éƒ½è§£ç å®Œ
 		}
 		cudaThreadSynchronize();
 
@@ -164,10 +164,10 @@ void LDPC_Decoder_GPU(int* D, float* Channel_Out, cudaDeviceProp prop, int* Addr
 }
 
 /*
-* Memory_RQ:ÓÃÓÚ´æ´¢±äÁ¿½ÚµãºÍĞ£Ñé½Úµã¼ÆËãÊ±µÃµ½µÄRÓëQÖµ
-* D:ÒëÂëÊä³ö
-* Weight_Variablenode:±äÁ¿½ÚµãÖØÁ¿
-* Address_Variablenode:Ã¿¸ö±äÁ¿½ÚµãËù¶ÔÓ¦Ğ£Ñé½ÚµãµÄmemory_rqµÄµØÖ·
+* Memory_RQ:ç”¨äºå­˜å‚¨å˜é‡èŠ‚ç‚¹å’Œæ ¡éªŒèŠ‚ç‚¹è®¡ç®—æ—¶å¾—åˆ°çš„Rä¸Qå€¼
+* D:è¯‘ç è¾“å‡º
+* Weight_Variablenode:å˜é‡èŠ‚ç‚¹é‡é‡
+* Address_Variablenode:æ¯ä¸ªå˜é‡èŠ‚ç‚¹æ‰€å¯¹åº”æ ¡éªŒèŠ‚ç‚¹çš„memory_rqçš„åœ°å€
 */
 __global__ void Variablenode_Kernel(float* Memory_RQ, int* D, float* Channel_Out, int* Address_Variablenode, int* Weight_Variablenode)
 {
@@ -177,15 +177,15 @@ __global__ void Variablenode_Kernel(float* Memory_RQ, int* D, float* Channel_Out
 	int Ad[15];
 	int Weight;
 
-	offset = threadIdx.x + blockIdx.x * blockDim.x;			// Ïß³ÌºÅ
-	num_Variablenode = offset / Num_Frames_OneTime;		// ±äÁ¿½ÚµãĞòºÅ£¨16¸öÖ¡µÄµÚÒ»¸ö±äÁ¿½Úµã-16¸öÖ¡µÄµÚ¶ş¸ö½Úµã-¡ª¡ª¡ª¡ª16¸öÖ¡µÄ×îºóÒ»¸ö½Úµã£©
-	num_Frames = offset % Num_Frames_OneTime;		// Ö¡ºÅ
-	num_VariablenodeZ = num_Variablenode / Z;					// ·Ö¿éÊ½Ğ£Ñé¾ØÕóÖĞ¶ÔÓ¦µÄÁĞ¿éºÅ,µÈÓÚoffset / (Z*Num_Frames_OneTime_define)£¨1¸özÎ¬¾ØÕó¿éz¸ö½Úµã£©
-	num_Variablenode = num_Variablenode * Weight_Variablenode[L];//×ª»»µ½ÔÚAddress_Variablenode_GPUÀïµÄÎ»ÖÃ£¨Ã¿¸ö±äÁ¿½Úµã¶ÔÓ¦µÄÁ¬½Ó¹ØÏµ£¬Address_Variablenode_GPUÃ¿Ò»¿éÊÇÒ»¸ö±äÁ¿½ÚµãºÍËùÓĞµÄÁ¬½Ó£©
+	offset = threadIdx.x + blockIdx.x * blockDim.x;			// çº¿ç¨‹å·
+	num_Variablenode = offset / Num_Frames_OneTime;		// å˜é‡èŠ‚ç‚¹åºå·ï¼ˆ16ä¸ªå¸§çš„ç¬¬ä¸€ä¸ªå˜é‡èŠ‚ç‚¹-16ä¸ªå¸§çš„ç¬¬äºŒä¸ªèŠ‚ç‚¹-â€”â€”â€”â€”16ä¸ªå¸§çš„æœ€åä¸€ä¸ªèŠ‚ç‚¹ï¼‰
+	num_Frames = offset % Num_Frames_OneTime;		// å¸§å·
+	num_VariablenodeZ = num_Variablenode / Z;					// åˆ†å—å¼æ ¡éªŒçŸ©é˜µä¸­å¯¹åº”çš„åˆ—å—å·,ç­‰äºoffset / (Z*Num_Frames_OneTime_define)ï¼ˆ1ä¸ªzç»´çŸ©é˜µå—zä¸ªèŠ‚ç‚¹ï¼‰
+	num_Variablenode = num_Variablenode * Weight_Variablenode[L];//è½¬æ¢åˆ°åœ¨Address_Variablenode_GPUé‡Œçš„ä½ç½®ï¼ˆæ¯ä¸ªå˜é‡èŠ‚ç‚¹å¯¹åº”çš„è¿æ¥å…³ç³»ï¼ŒAddress_Variablenode_GPUæ¯ä¸€å—æ˜¯ä¸€ä¸ªå˜é‡èŠ‚ç‚¹å’Œæ‰€æœ‰çš„è¿æ¥ï¼‰
 
 	
 
-	if (offset < CW_Len * Num_Frames_OneTime)//memoryÊı×éÀïÊÇ£¨Ö¡1±äÁ¿½Úµã1Á¬½ÓµÄ½Úµã¡ª¡ªÖ¡2½ÚµãµÄ1Á¬½ÓµÄ½Úµã¡ª¡ªÖ¡3¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª£©
+	if (offset < CW_Len * Num_Frames_OneTime)//memoryæ•°ç»„é‡Œæ˜¯ï¼ˆå¸§1å˜é‡èŠ‚ç‚¹1è¿æ¥çš„èŠ‚ç‚¹â€”â€”å¸§2èŠ‚ç‚¹çš„1è¿æ¥çš„èŠ‚ç‚¹â€”â€”å¸§3â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”ï¼‰
 	{
 		Weight = Weight_Variablenode[num_VariablenodeZ];
 		for (int i = 0; i < Weight; i++)
@@ -201,7 +201,7 @@ __global__ void Variablenode_Kernel(float* Memory_RQ, int* D, float* Channel_Out
 			Add_result += R[i];
 		}
 		Add_result += Channel_Out[offset];
-		D[offset] = (Add_result < 0) ? 1 : 0;//¸ù¾İR¼ÆËãQ£¬±äÁ¿½Úµã;
+		D[offset] = (Add_result < 0) ? 1 : 0;//æ ¹æ®Rè®¡ç®—Qï¼Œå˜é‡èŠ‚ç‚¹;
 		for (int i = 0; i < Weight;i++)
 		{
 			Memory_RQ[Ad[i]] = Add_result - R[i];
@@ -210,10 +210,10 @@ __global__ void Variablenode_Kernel(float* Memory_RQ, int* D, float* Channel_Out
 	}
 }
 /*
-* Memory_RQ:ÓÃÓÚ´æ´¢±äÁ¿½ÚµãºÍĞ£Ñé½Úµã¼ÆËãÊ±µÃµ½µÄRÓëQÖµ
-* D:ÒëÂëÊä³ö
-* Weight_Variablenode:±äÁ¿½ÚµãÖØÁ¿
-* Address_Variablenode:Ã¿¸ö±äÁ¿½ÚµãËù¶ÔÓ¦Ğ£Ñé½ÚµãµÄmemory_rqµÄµØÖ·
+* Memory_RQ:ç”¨äºå­˜å‚¨å˜é‡èŠ‚ç‚¹å’Œæ ¡éªŒèŠ‚ç‚¹è®¡ç®—æ—¶å¾—åˆ°çš„Rä¸Qå€¼
+* D:è¯‘ç è¾“å‡º
+* Weight_Variablenode:å˜é‡èŠ‚ç‚¹é‡é‡
+* Address_Variablenode:æ¯ä¸ªå˜é‡èŠ‚ç‚¹æ‰€å¯¹åº”æ ¡éªŒèŠ‚ç‚¹çš„memory_rqçš„åœ°å€
 */
 __global__ void Variablenode_Shared_Kernel(float* Memory_RQ, int* D, float* Channel_Out, int* Address_Variablenode, int* Weight_Variablenode)
 {
@@ -223,21 +223,21 @@ __global__ void Variablenode_Shared_Kernel(float* Memory_RQ, int* D, float* Chan
 	int Ad[15];
 	__shared__ int Weight;
 
-	offset = threadIdx.x + blockIdx.x * blockDim.x;			// Ïß³ÌºÅ
-	num_Variablenode = offset / Num_Frames_OneTime;		// ±äÁ¿½ÚµãĞòºÅ£¨16¸öÖ¡µÄµÚÒ»¸ö±äÁ¿½Úµã-16¸öÖ¡µÄµÚ¶ş¸ö½Úµã-¡ª¡ª¡ª¡ª16¸öÖ¡µÄ×îºóÒ»¸ö½Úµã£©
-	num_Frames = offset % Num_Frames_OneTime;		// Ö¡ºÅ
-	num_VariablenodeZ = num_Variablenode / Z;					// ·Ö¿éÊ½Ğ£Ñé¾ØÕóÖĞ¶ÔÓ¦µÄÁĞ¿éºÅ,µÈÓÚoffset / (Z*Num_Frames_OneTime_define)£¨1¸özÎ¬¾ØÕó¿éz¸ö½Úµã£©
-	num_Variablenode = num_Variablenode * Weight_Variablenode[L];//×ª»»µ½ÔÚAddress_Variablenode_GPUÀïµÄÎ»ÖÃ£¨Ã¿¸ö±äÁ¿½Úµã¶ÔÓ¦µÄÁ¬½Ó¹ØÏµ£¬Address_Variablenode_GPUÃ¿Ò»¿éÊÇÒ»¸ö±äÁ¿½ÚµãºÍËùÓĞµÄÁ¬½Ó£©
+	offset = threadIdx.x + blockIdx.x * blockDim.x;			// çº¿ç¨‹å·
+	num_Variablenode = offset / Num_Frames_OneTime;		// å˜é‡èŠ‚ç‚¹åºå·ï¼ˆ16ä¸ªå¸§çš„ç¬¬ä¸€ä¸ªå˜é‡èŠ‚ç‚¹-16ä¸ªå¸§çš„ç¬¬äºŒä¸ªèŠ‚ç‚¹-â€”â€”â€”â€”16ä¸ªå¸§çš„æœ€åä¸€ä¸ªèŠ‚ç‚¹ï¼‰
+	num_Frames = offset % Num_Frames_OneTime;		// å¸§å·
+	num_VariablenodeZ = num_Variablenode / Z;					// åˆ†å—å¼æ ¡éªŒçŸ©é˜µä¸­å¯¹åº”çš„åˆ—å—å·,ç­‰äºoffset / (Z*Num_Frames_OneTime_define)ï¼ˆ1ä¸ªzç»´çŸ©é˜µå—zä¸ªèŠ‚ç‚¹ï¼‰
+	num_Variablenode = num_Variablenode * Weight_Variablenode[L];//è½¬æ¢åˆ°åœ¨Address_Variablenode_GPUé‡Œçš„ä½ç½®ï¼ˆæ¯ä¸ªå˜é‡èŠ‚ç‚¹å¯¹åº”çš„è¿æ¥å…³ç³»ï¼ŒAddress_Variablenode_GPUæ¯ä¸€å—æ˜¯ä¸€ä¸ªå˜é‡èŠ‚ç‚¹å’Œæ‰€æœ‰çš„è¿æ¥ï¼‰
 
 	if (threadIdx.x == 0 && num_VariablenodeZ < L)
 	{
-		Weight = Weight_Variablenode[num_VariablenodeZ];//Ö»ĞèÒª¸³Ò»´ÎÖµ
+		Weight = Weight_Variablenode[num_VariablenodeZ];//åªéœ€è¦èµ‹ä¸€æ¬¡å€¼
 	}
 	__syncthreads();
 
-	if (offset < CW_Len * Num_Frames_OneTime)//memoryÊı×éÀïÊÇ£¨Ö¡1±äÁ¿½Úµã1Á¬½ÓµÄ½Úµã¡ª¡ªÖ¡2½ÚµãµÄ1Á¬½ÓµÄ½Úµã¡ª¡ªÖ¡3¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª£©
+	if (offset < CW_Len * Num_Frames_OneTime)//memoryæ•°ç»„é‡Œæ˜¯ï¼ˆå¸§1å˜é‡èŠ‚ç‚¹1è¿æ¥çš„èŠ‚ç‚¹â€”â€”å¸§2èŠ‚ç‚¹çš„1è¿æ¥çš„èŠ‚ç‚¹â€”â€”å¸§3â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”ï¼‰
 	{
-		// ¼ÆËãµØÖ·µÄÊ±ºò²»ĞèÒª¸ù¾İÖØÁ¿
+		// è®¡ç®—åœ°å€çš„æ—¶å€™ä¸éœ€è¦æ ¹æ®é‡é‡
 		for (int i = 0; i < Weight; i++)
 		{
 			Ad[i] = Address_Variablenode[num_Variablenode + i] * Num_Frames_OneTime + num_Frames;
@@ -251,7 +251,7 @@ __global__ void Variablenode_Shared_Kernel(float* Memory_RQ, int* D, float* Chan
 			Add_result += R[i];
 		}
 		Add_result += Channel_Out[offset];
-		D[offset] = (Add_result < 0) ? 1 : 0;//¸ù¾İR¼ÆËãQ£¬±äÁ¿½Úµã;
+		D[offset] = (Add_result < 0) ? 1 : 0;//æ ¹æ®Rè®¡ç®—Qï¼Œå˜é‡èŠ‚ç‚¹;
 		for (int i = 0; i < Weight; i++)
 		{
 			Memory_RQ[Ad[i]] = Add_result - R[i];
@@ -269,14 +269,14 @@ __global__ void Checknode_Kernel(float* Memory_RQ, int* Weight_Checknode)
 	int Index_minQ;
 
 	offset = threadIdx.x + blockIdx.x * blockDim.x;
-	num_Checknode = offset / Num_Frames_OneTime;													// Ğ£Ñé½ÚµãĞòºÅ
-	num_Frames = offset % Num_Frames_OneTime;													// Ö¡ºÅ
-	num_Frames = num_Frames + num_Checknode * Num_Frames_OneTime * Weight_Checknode[J];	// µ±Ç°Ö¡µÄ¸ÃĞ£Ñé½ÚµãµÚ0¸öQÖµµÄ´æ·ÅµØÖ·
-	num_ChecknodeZ = num_Checknode / Z;																	// µ±Ç°Ğ£Ñé½ÚµãËùÔÚµÄÁĞ¿éºÅ
+	num_Checknode = offset / Num_Frames_OneTime;													// æ ¡éªŒèŠ‚ç‚¹åºå·
+	num_Frames = offset % Num_Frames_OneTime;													// å¸§å·
+	num_Frames = num_Frames + num_Checknode * Num_Frames_OneTime * Weight_Checknode[J];	// å½“å‰å¸§çš„è¯¥æ ¡éªŒèŠ‚ç‚¹ç¬¬0ä¸ªQå€¼çš„å­˜æ”¾åœ°å€
+	num_ChecknodeZ = num_Checknode / Z;																	// å½“å‰æ ¡éªŒèŠ‚ç‚¹æ‰€åœ¨çš„åˆ—å—å·
 
 	
 
-	if (offset < Num_Frames_OneTime * parLen)//q¾ÍÊÇmemory_rqµÄÒ»ĞĞ
+	if (offset < Num_Frames_OneTime * parLen)//qå°±æ˜¯memory_rqçš„ä¸€è¡Œ
 	{
 		Weight = Weight_Checknode[num_ChecknodeZ];
 		for (int i = 0; i < Weight; i++)
@@ -323,18 +323,18 @@ __global__ void Checknode_Shared_Kernel(float* Memory_RQ, int* Weight_Checknode)
 	int Index_minQ;
 
 	offset = threadIdx.x + blockIdx.x * blockDim.x;
-	num_Checknode = offset / Num_Frames_OneTime;													// Ğ£Ñé½ÚµãĞòºÅ
-	num_Frames = offset % Num_Frames_OneTime;													// Ö¡ºÅ
-	num_Frames = num_Frames + num_Checknode * Num_Frames_OneTime * Weight_Checknode[J];	// µ±Ç°Ö¡µÄ¸ÃĞ£Ñé½ÚµãµÚ0¸öQÖµµÄ´æ·ÅµØÖ·
-	num_ChecknodeZ = num_Checknode / Z;																	// µ±Ç°Ğ£Ñé½ÚµãËùÔÚµÄÁĞ¿éºÅ
+	num_Checknode = offset / Num_Frames_OneTime;													// æ ¡éªŒèŠ‚ç‚¹åºå·
+	num_Frames = offset % Num_Frames_OneTime;													// å¸§å·
+	num_Frames = num_Frames + num_Checknode * Num_Frames_OneTime * Weight_Checknode[J];	// å½“å‰å¸§çš„è¯¥æ ¡éªŒèŠ‚ç‚¹ç¬¬0ä¸ªQå€¼çš„å­˜æ”¾åœ°å€
+	num_ChecknodeZ = num_Checknode / Z;																	// å½“å‰æ ¡éªŒèŠ‚ç‚¹æ‰€åœ¨çš„åˆ—å—å·
 
-	if (threadIdx.x == 0 && num_ChecknodeZ < J)		// ÓÃµÚ0¸öÏß³ÌÕÒµ½¸ÃÏß³Ì¿éÖĞËùÓĞÏß³Ì¶ÔÓ¦µÄÖØÁ¿
+	if (threadIdx.x == 0 && num_ChecknodeZ < J)		// ç”¨ç¬¬0ä¸ªçº¿ç¨‹æ‰¾åˆ°è¯¥çº¿ç¨‹å—ä¸­æ‰€æœ‰çº¿ç¨‹å¯¹åº”çš„é‡é‡
 	{
 		Weight = Weight_Checknode[num_ChecknodeZ];
 	}
 	__syncthreads();
 
-	if (offset < Num_Frames_OneTime * parLen)//q¾ÍÊÇmemory_rqµÄÒ»ĞĞ
+	if (offset < Num_Frames_OneTime * parLen)//qå°±æ˜¯memory_rqçš„ä¸€è¡Œ
 	{
 		for (int i = 0; i < Weight; i++)
 		{

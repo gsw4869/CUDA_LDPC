@@ -17,17 +17,17 @@
 /*LDPC码相关参数*/
 
 
-#define	J		         			4									// 行分块个数
-#define	L       					24									// 列分块个数
-#define	Z       					96								    // 分块矩阵维数,其中每个分块矩阵的维数为Z_define*Z_define
-#define	CW_Len      				2304								// 码字长度,用于GPU计算中
+#define	J		         			12									// 行分块个数
+#define	L       					69									// 列分块个数
+#define	Z       					256								    // 分块矩阵维数,其中每个分块矩阵的维数为Z_define*Z_define
+#define	CW_Len      				17664								// 码字长度,用于GPU计算中
 #define	msgLen      				1920								// 信息位长度,用于GPU计算中
-#define	parLen          			384         						// 校验位长度,用于GPU计算中
+#define	parLen          			14592         						// 校验位长度,用于GPU计算中
 #define	PN_Message          		0									// 0--全零序列; 1--PN序列(注意,本程序只支持全零序列)
-#define minWeight_checknode			4
-#define maxWeight_checknode			25
-#define minWeight_variablenode		2
-#define	maxWeight_variablenode		15
+#define minWeight_checknode			22
+#define maxWeight_checknode			23
+#define minWeight_variablenode		3
+#define	maxWeight_variablenode		12
 #define rate                        ((float)msgLen/CW_Len)
 
 
@@ -45,7 +45,7 @@
 #define	snrtype				1									// 0--Eb/No; 1--Es/No
 
 /*�������*/
-#define	startSNR		    1.0
+#define	startSNR		    0
 #define	stepSNR				0.2
 #define	stopSNR				13.0
 

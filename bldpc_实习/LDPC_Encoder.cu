@@ -4,8 +4,8 @@
 #include "struct.cuh"
 
 /*
-* CodeWord£ºÔ­Ê¼Âë×é
-* BPSK_Out£º¾­¹ıBPSKµ÷ÖÆµÄÊä³öĞÅºÅ
+* CodeWordï¼šåŸå§‹ç ç»„
+* BPSK_Outï¼šç»è¿‡BPSKè°ƒåˆ¶çš„è¾“å‡ºä¿¡å·
 */
 __global__ void BPSK(float* BPSK_Out, int* CodeWord)
 {
@@ -19,8 +19,8 @@ __global__ void BPSK(float* BPSK_Out, int* CodeWord)
 }
 
 /*
-* CodeWord£ºÔ­Ê¼Âë×é
-* Channel_Out£º¾­¹ıBPSKµ÷ÖÆµÄÊä³öĞÅºÅ
+* CodeWordï¼šåŸå§‹ç ç»„
+* Channel_Outï¼šç»è¿‡BPSKè°ƒåˆ¶çš„è¾“å‡ºä¿¡å·
 */
 void AWGNChannel_CPU(AWGNChannel* AWGN, float* Channel_Out,int* CodeWord)
 {
@@ -35,7 +35,7 @@ void AWGNChannel_CPU(AWGNChannel* AWGN, float* Channel_Out,int* CodeWord)
 			u2 = RandomModule(AWGN->seed);
 
 			temp = (float)sqrt((float)(-2) * log((float)1 - u1));
-			*(Channel_Out + index1 * Num_Frames_OneTime + index0) = (AWGN->sigma) * sin(2 * PI * u2) * temp + 1.0 - 2 * (*(CodeWord + index1 * Num_Frames_OneTime + index0));//²úÉú¸ßË¹°×ÔëÉùĞÅºÅ(https://www.cnblogs.com/tsingke/p/6194737.html)
+			*(Channel_Out + index1 * Num_Frames_OneTime + index0) = (AWGN->sigma) * sin(2 * PI * u2) * temp + 1.0 - 2 * (*(CodeWord + index1 * Num_Frames_OneTime + index0));//äº§ç”Ÿé«˜æ–¯ç™½å™ªå£°ä¿¡å·(https://www.cnblogs.com/tsingke/p/6194737.html)
 		}
 	}
 }

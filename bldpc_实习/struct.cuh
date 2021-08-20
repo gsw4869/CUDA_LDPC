@@ -5,24 +5,24 @@
 
 typedef struct
 {
-	int iteraTime;		// µ±Ç°Ö¡Íê³ÉÒëÂëËùÓÃµÄµü´ú´ÎÊı,Í³¼ÆÓÃ
+	int iteraTime;		// å½“å‰å¸§å®Œæˆè¯‘ç æ‰€ç”¨çš„è¿­ä»£æ¬¡æ•°,ç»Ÿè®¡ç”¨
 }LDPCCode;
 typedef struct
 {
-	int seed[3];		// ÔëÉùÖÖ×Ó
+	int seed[3];		// å™ªå£°ç§å­
 	float sigma;
 }AWGNChannel;
 
 typedef struct
 {
-	float SNR;			// µ±Ç°·ÂÕæµÄSNR
+	float SNR;			// å½“å‰ä»¿çœŸçš„SNR
 
-	long num_Frames;		// µ±Ç°SNRÏÂÒÑ¾­·ÂÕæµÄÖ¡Êı
-	long num_Error_Frames;	// µ±Ç°SNRÏÂÒÑ¾­´íÎóµÄÖ¡Êı
-	long num_Error_Bits;	// µ±Ç°SNRÏÂ´íÎóµÄ×ÜĞÅÏ¢±ÈÌØÊı
-	long Total_Iteration;	// µ±Ç°SNRÏÂÒÑ¾­·ÂÕæµÄÖ¡µÄ×Üµü´ú´ÎÊı,ÓÃÀ´¼ÆËã¾ùÖµ
-	long num_False_Frames;	// µ±Ç°SNRÏÂµÄÎóÅĞÖ¡Êı(½«´íÎó(ĞÅÏ¢Î»ÓĞ´íÎó±ÈÌØ)µÄÖ¡ÅĞÎªÕıÈ·(Ğ£Ñé½á¹ûÕıÈ·)µÄÖ¡)
-	long num_Alarm_Frames;	// µ±Ç°SNRÏÂµÄĞé¾¯Ö¡Êı(½«ÕıÈ·(ĞÅÏ¢Î»ÎŞ´íÎó±ÈÌØ)µÄÖ¡ÅĞÎª´íÎó(Ğ£Ñé½á¹û´íÎó)µÄÖ¡)
+	long num_Frames;		// å½“å‰SNRä¸‹å·²ç»ä»¿çœŸçš„å¸§æ•°
+	long num_Error_Frames;	// å½“å‰SNRä¸‹å·²ç»é”™è¯¯çš„å¸§æ•°
+	long num_Error_Bits;	// å½“å‰SNRä¸‹é”™è¯¯çš„æ€»ä¿¡æ¯æ¯”ç‰¹æ•°
+	long Total_Iteration;	// å½“å‰SNRä¸‹å·²ç»ä»¿çœŸçš„å¸§çš„æ€»è¿­ä»£æ¬¡æ•°,ç”¨æ¥è®¡ç®—å‡å€¼
+	long num_False_Frames;	// å½“å‰SNRä¸‹çš„è¯¯åˆ¤å¸§æ•°(å°†é”™è¯¯(ä¿¡æ¯ä½æœ‰é”™è¯¯æ¯”ç‰¹)çš„å¸§åˆ¤ä¸ºæ­£ç¡®(æ ¡éªŒç»“æœæ­£ç¡®)çš„å¸§)
+	long num_Alarm_Frames;	// å½“å‰SNRä¸‹çš„è™šè­¦å¸§æ•°(å°†æ­£ç¡®(ä¿¡æ¯ä½æ— é”™è¯¯æ¯”ç‰¹)çš„å¸§åˆ¤ä¸ºé”™è¯¯(æ ¡éªŒç»“æœé”™è¯¯)çš„å¸§)
 	
 	float FER;				// =num_Error_Frames/num_Frames
 	float BER;				// =num_Error_Bits/num_Frames
